@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+    <style>
+        story {
+            margin-left: 230;
+            margin-right: 230;
+            display: block;
+            text-align: left;
+            text-indent: 12;
+            font-size: 18;
+            font-family: "Times New Roman";
+        }
+        h1 {
+            font-style: italic;
+        }
+    </style>
+    <h1>Journey of Distangibility</h1><br>
+    {% for line in story %}
+    <story>{{ line }}</story><br>
+    {% endfor %}
+    <br><br>
+    {% if stats %}
+    It is time to roll your stats. You'll want to write these down. You rolled:<br>
+    STR&nbsp; SKL&nbsp; INT<br>&nbsp;&nbsp;&nbsp;&nbsp;
+    {% for stat in stats %}
+    {{ stat }}&nbsp;&nbsp;&nbsp;&nbsp;
+    {% endfor %}
+    <br><br>
+    {% endif %}
+    {% for link in links %}
+    <a href="http://dracunos.pythonanywhere.com/journey?pg={{ link.page }}">{{ link.text }}</a><br><br>
+    {% endfor %}
+{% endblock %}

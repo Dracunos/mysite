@@ -1,0 +1,36 @@
+<html>
+    <head>
+        {% if ttl %}
+        <title>{{ ttl }}</title>
+        {% else %}
+        <title>Welcome</title>
+        {% endif %}
+        <style>
+        h1 {
+            text-align: center;
+            color: black
+        }
+        body {
+            text-align: center;
+            background-color: #FFFAFF;
+        }
+        div {
+            padding-top: 25px;
+            padding-bottom: 25px
+        }
+        msgs {
+            color: #000000;
+            font-weight:bold;
+            font-size:125%;
+        }
+        span {
+            color: red;
+        }
+        </style>
+    </head>
+    <body>
+        <h1>MySite</h1>
+        <a href="/">Home</a> - <a href="/hangman">Hangman</a> - <a href="/test">Test</a> - <a href="/journey">Journey</a><hr>
+        {% block content %}{% endblock %}
+    </body>
+</html>

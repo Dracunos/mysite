@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+    <br>
+    {% if won %}
+        <img src="/static/hmw.jpg" height=550 width=500>
+        <br>You won! The word was {{ word }}.
+    {% else %}
+        <img src="/static/hm6.jpg" height=550 width=500>
+        <br>You lost :( The word was {{ word }}.
+    {% endif %}
+    <br><br>
+    Pick a new category.<br>
+    <form action="" method="post" name="gametypeform">
+        {{ formnew.hidden_tag() }}
+        <p>
+            {% for type in formnew.gametype %}
+            {{ type }} {{ type.label }}<br>
+            {% endfor %}
+            <br>
+        </p>
+        <p><input type="submit" value="New Game" name="btn"></p>
+    </form>
+{% endblock %}

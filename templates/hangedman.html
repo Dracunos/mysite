@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+    <br>
+    {% if missed == 1 %}
+        <img src="/static/hm1.jpg" height=550 width=500>
+    {% elif missed == 2 %}
+        <img src="/static/hm2.jpg" height=550 width=500>
+    {% elif missed == 3 %}
+        <img src="/static/hm3.jpg" height=550 width=500>
+    {% elif missed == 4 %}
+        <img src="/static/hm4.jpg" height=550 width=500>
+    {% elif missed == 5 %}
+        <img src="/static/hm5.jpg" height=550 width=500>
+    {% elif missed == 6 %}
+        <img src="/static/hm6.jpg" height=550 width=500>
+    {% else %}
+        <img src="/static/hm0.jpg" height=550 width=500>
+    {% endif %}
+    <br><br>
+    {% if word %}
+        {{ word }}
+    {% endif %}
+    <br><form action="" method="post" name="hmform">
+        {{ form.hidden_tag() }}
+        <p>
+            Pick a letter: {{ form.hminput(size='3', autofocus=true) }}
+            {% if tried %}
+                <br> Tried: {{ tried }}
+            {% endif %}
+            <br>Category: {{ category }}<br>
+            <br>
+            {% for error in form.hminput.errors %}
+                <span>[{{ error }}]</span>
+            {% endfor %}<br>
+        </p>
+        <p><input type="submit" value="Submit" name="btn"></p>
+    </form>
+    {% if alreadypick %}
+        <span>This letter has already been tried.</span>
+        <br>
+    {% endif %}
+    {% if numin %}
+        <span>Letters only.</span>
+        <br>
+    {% endif %}
+    <br>
+{% endblock %}
