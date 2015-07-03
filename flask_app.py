@@ -1,8 +1,8 @@
 import os
+from random import randint
 from flask import Flask, render_template, redirect, request
 from flask_wtf import Form
 from wtforms import StringField, RadioField, validators
-from random import randint
 from mods import journeygame
 from config import basedir
 
