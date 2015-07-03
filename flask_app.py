@@ -1,13 +1,20 @@
 import os
 from random import randint
 from flask import Flask, render_template, redirect, request
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_required
 from flask_wtf import Form
 from wtforms import StringField, RadioField, validators
 from mods import journeygame
 from config import basedir
+import models
 
 app = Flask(__name__)
 app.config.from_object('config')
+db = SQLAlchemy
+lm = LoginManager()
+lm.init_app(app)
+lm.login_view = 'login'
 
 
 @app.route('/')
@@ -129,6 +136,12 @@ def hangedman():
 
     return render_template('hangedman.html', form=form, word=word, tried=tried,
                            missed=missed, category=category, ttl='Hangman')
+
+
+@app.route('/membersarea')
+@login_required
+def members_area():
+    return render_template('membersarea.html', ttl='Members Area')
 
 
 class MyForm(Form):
