@@ -7,14 +7,15 @@ from flask_wtf import Form
 from wtforms import StringField, RadioField, validators
 from mods import journeygame
 from config import basedir
-import models
 
 app = Flask(__name__)
 app.config.from_object('config')
-db = SQLAlchemy
+db = SQLAlchemy(app)
 lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'login'
+
+import models
 
 
 @app.route('/')
