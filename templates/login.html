@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+    Login Page<br><br>
+    <a href="/register">Click here to register a new account</a><br><br>
+    <br><br><br><form action="" method="post" name="login">
+        {{ form.hidden_tag() }}
+        <p>
+            Username: {{ form.username(size=20) }}<br>
+        </p>
+        <p>Password: {{ form.password(size=20) }}</p>
+        <p><input type="submit" value="Login"></p>
+    </form>
+{% endblock %}

@@ -1,10 +1,12 @@
 import os
 from random import randint
-from flask import Flask, render_template, redirect, request
+from flask import (Flask, render_template, redirect, request, session,
+                   url_for, g, flash)
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, login_required
+from flask_login import (LoginManager, login_required, login_user,
+                         current_user, logout_user)
 from flask_wtf import Form
-from wtforms import StringField, RadioField, validators
+from wtforms import StringField, RadioField, validators, BooleanField
 from mods import journeygame
 from config import basedir
 
@@ -35,7 +37,7 @@ def myform():
         x = open(os.path.join(basedir, 'textdata/post.txt'), 'a')
         x.write('\n' + poster + ': ' + posted)
         x.close()
-        return redirect('/')
+        return redirect(url_for('index'))
     return render_template('myform.html', form=form, ttl='New Post')
 
 
@@ -139,10 +141,79 @@ def hangedman():
                            missed=missed, category=category, ttl='Hangman')
 
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if g.user is not None and g.user.is_authenticated():
+        return redirect(url_for('index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data.title()
+        user = models.User.query.filter_by(username=username).first()
+        if user is None:  # Username is not in database
+            flash('Username not found. Please register.')
+            return redirect(url_for('registration'))
+        if user.check_password(form.password.data):  # password check
+            remember_me = form.remember_me.data
+            login_user(user, remember=remember_me)
+            flash('Welcome, ' + user.username)
+            return redirect(url_for('index'))
+        else:
+            flash('Incorrect password.')
+            return redirect(url_for('login'))
+    return render_template('login.html', form=form, ttl='Login')
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('You have been logged out.')
+    return redirect(url_for('index'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def registration():
+    if g.user is not None and g.user.is_authenticated():
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        username = form.username.data.title()
+        if models.User.query.filter_by(username=username).first() is not None:
+            flash('Username is already taken.')
+            return redirect(url_for('registration'))
+        password = form.password.data
+        user = models.User(username, password)
+        db.session.add(user)
+        db.session.commit()
+        flash('Registered, please log in.')
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form, ttl='Registration')
+
+
+@lm.user_loader
+def load_user(user_id):
+    return models.User.query.get(int(user_id))
+
+
 @app.route('/membersarea')
 @login_required
 def members_area():
     return render_template('membersarea.html', ttl='Members Area')
+
+
+class LoginForm(Form):
+    username = StringField('username', validators=[validators.DataRequired()])
+    password = StringField('password', validators=[validators.DataRequired()])
+    remember_me = BooleanField('remember_me', default=False)
+
+
+class RegistrationForm(Form):
+    username = StringField('username', validators=[validators.DataRequired()])
+    password = StringField('password', validators=[validators.DataRequired()])
+
+
+@app.before_request
+def before_request():
+    g.user = current_user
 
 
 class MyForm(Form):
