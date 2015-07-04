@@ -7,7 +7,12 @@
         <p>
             Username: {{ form.username(size=20) }}<br>
         </p>
-        <p>Password: {{ form.password(size=20) }}</p>
+        <p>
+            Password: {{ form.password(size=20) }}<br>
+        </p>
+        <p>
+            Remember Me: {{ form.remember_me }}
+        </p>
         <p><input type="submit" value="Login"></p>
     </form>
 {% endblock %}

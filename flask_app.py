@@ -1,7 +1,7 @@
 import os
 from random import randint
-from flask import (Flask, render_template, redirect, request, session,
-                   url_for, g, flash)
+from flask import (Flask, render_template, redirect, request, url_for, g,
+                   flash)
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (LoginManager, login_required, login_user,
                          current_user, logout_user)
@@ -38,6 +38,8 @@ def myform():
         x.write('\n' + poster + ': ' + posted)
         x.close()
         return redirect(url_for('index'))
+    else:
+        flash_errors(form)
     return render_template('myform.html', form=form, ttl='New Post')
 
 
@@ -113,6 +115,8 @@ def hangedman():
                 x.close()
                 return redirect('/hangman')
         return 'Error, can\'t find ' + formnew.gametype.data
+    else:
+        flash_errors(form)
     if won:
         return render_template('hmend.html', word=hmdata[0][0:-1], won=won,
                                formnew=formnew, ttl='Hangman')
@@ -136,6 +140,8 @@ def hangedman():
         x.write(hminput)
         x.close()
         return redirect('/hangman')
+    else:
+        flash_errors(form)
 
     return render_template('hangedman.html', form=form, word=word, tried=tried,
                            missed=missed, category=category, ttl='Hangman')
@@ -160,6 +166,9 @@ def login():
         else:
             flash('Incorrect password.')
             return redirect(url_for('login'))
+    else:
+        flash_errors(form)
+        print '-------------------------flashing errors'
     return render_template('login.html', form=form, ttl='Login')
 
 
@@ -186,6 +195,8 @@ def registration():
         db.session.commit()
         flash('Registered, please log in.')
         return redirect(url_for('login'))
+    else:
+        flash_errors(form)
     return render_template('register.html', form=form, ttl='Registration')
 
 
@@ -201,14 +212,22 @@ def members_area():
 
 
 class LoginForm(Form):
-    username = StringField('username', validators=[validators.DataRequired()])
-    password = StringField('password', validators=[validators.DataRequired()])
+    username = StringField('username', validators=[validators.DataRequired(
+        message='Username required.'
+    )])
+    password = StringField('password', validators=[validators.DataRequired(
+        message='Password required.'
+    )])
     remember_me = BooleanField('remember_me', default=False)
 
 
 class RegistrationForm(Form):
-    username = StringField('username', validators=[validators.DataRequired()])
-    password = StringField('password', validators=[validators.DataRequired()])
+    username = StringField('username', validators=[validators.DataRequired(
+        message='Username required.'
+    )])
+    password = StringField('password', validators=[validators.DataRequired(
+        message='Password required.'
+    )])
 
 
 @app.before_request
@@ -232,6 +251,15 @@ class NHMForm(Form):
                              ('technology', 'Technology'),
                              ('countries', 'Countries')],
         default='animals')
+
+
+def flash_errors(form):
+    """Flashes form errors"""
+    for field, errors in form.errors.items():
+        print '------------------for each form.errors'
+        for error in errors:
+            print '-----------------for each error'
+            flash(error)
 
 
 if __name__ == '__main__':
