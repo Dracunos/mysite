@@ -328,7 +328,8 @@ pages = {
         'links': [{'text': 'In the sky', 'page': '42'}]
     },
     42: {
-        'text': ['In just moments the landscape spreads out beneath you as you rise high into the sky. '],
+        'text': ['In just moments the landscape spreads out beneath you as you rise high into the sky. ',
+                 'A sense of freedom pervades your soul as you look around among the clouds'],
         'links': [
             {'text': 'Choice1', 'page': ''},
             {'text': 'Choice2', 'page': ''}
