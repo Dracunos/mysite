@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+    <br>
+        <p>
+        {% if justsolved %}
+        <span>Congratulations, you won!</span>
+        {% endif %}
+        <h1>The number was {{ answer }}.</h1>
+        It took {{ tries }} tries.
+
+        </p>
+        <form action="" method="post" name="newnumform">
+        {{ form.hidden_tag() }}
+        <p><input type="submit" value="New Game" name="btn"></p>
+    </form>
+    <br>
+{% endblock %}

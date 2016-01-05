@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_required
 from flask_wtf import Form
 from wtforms import StringField, RadioField, validators
+import requests
 from mods import journeygame
 from config import basedir
 
@@ -41,10 +42,21 @@ def myform():
 
 @app.route('/test')
 def test():
+    alex_id = '76561197975951347'
+    key = '4B8D33CFBF8228FFA1F1435CABDA3818'
+    r = requests.get("http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/", params={'key':key, 'steamids':alex_id}).json()['response']['players'][0]
+    alex_games = requests.get("http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/", params={'key':key, 'steamid':alex_id}).json()['response']['games']
+    total = sum([alex_games[i]['playtime_forever'] for i, v in enumerate(alex_games)]) / 60
     tt = '<a href="https://www.google.com">Goog</a>'
     return """This is my test page.
     <br> Link from var: {}
-    """.format(tt)
+    <br>
+    <br> Alex:
+    <br>{}<br><img src={}>
+    <br><br>
+    Alex has wasted a total of {:,} recorded hours on steam games.. And that's just recorded.. What a jerk.<br>
+    That's {:,} days of his life spent sitting at a chair playing video games! I'm sure the real number is well over {:,} days.
+    """.format(tt, r['personaname'], r['avatarfull'], total, round(total / 24.0, 2), total // 12)
 
 
 @app.route('/journey')
@@ -139,6 +151,53 @@ def hangedman():
                            missed=missed, category=category, ttl='Hangman')
 
 
+@app.route('/numbers', methods=['GET', 'POST'])
+def numbers():
+    x = open(os.path.join(basedir, 'textdata/nums.txt'), 'r')
+    numdata = x.readlines()
+    solved = True if numdata[0] == 'Solved\n' else False
+    tries = int(numdata[1][:-1])
+    answer = int(numdata[2])
+    x.close()
+    form = NumForm()
+    newform = NewNumForm()
+    if newform.validate_on_submit() and request.form['btn'] == 'New Game':
+        randnum = randint(1, 100)
+        x = open(os.path.join(basedir, 'textdata/nums.txt'), 'w')
+        x.write('Unsolved\n0\n' + str(randnum))
+        x.close()
+        return redirect('/numbers')
+    if form.validate_on_submit() and request.form['btn'] == 'Submit':
+        num = form.num.data
+        if num not in [str(i) for i in range(1, 101)]:
+            return render_template('numbers.html', form=form, ttl='Numbers',
+                                   tries = tries, wrongin = True)
+        tries += 1
+        if int(num) == answer:
+            x = open(os.path.join(basedir, 'textdata/nums.txt'), 'w')
+            x.write('Solved\n' + str(tries) + '\n' + str(answer))
+            x.close()
+            return render_template('numend.html', form=newform, ttl='Numbers',
+                                   tries = tries, justsolved = True,
+                                   answer = answer)
+        if int(num) > answer:
+            greater = False
+        if int(num) < answer:
+            greater = True
+        x = open(os.path.join(basedir, 'textdata/nums.txt'), 'w')
+        x.write('Unsolved\n' + str(tries) + '\n' + str(answer))
+        x.close()
+        form.num.data = None
+        return render_template('numbers.html', form=form, ttl='Numbers',
+                               tries = tries, greater = greater, num = num)
+
+    if solved:
+        return render_template('numend.html', form=newform, ttl='Numbers',
+                               tries = tries, answer = answer)
+    return render_template('numbers.html', form=form, ttl='Numbers',
+                           tries = tries)
+
+
 @app.route('/membersarea')
 @login_required
 def members_area():
@@ -161,6 +220,13 @@ class NHMForm(Form):
                              ('technology', 'Technology'),
                              ('countries', 'Countries')],
         default='animals')
+
+
+class NumForm(Form):
+    num = StringField('num')
+
+class NewNumForm(Form):
+    pass
 
 
 if __name__ == '__main__':

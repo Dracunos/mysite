@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+    <br>
+    <br><form action="" method="post" name="numform">
+        {{ form.hidden_tag() }}
+        <p>
+            {% if num %}
+            {% if greater %}
+            The number is greater than {{ num }}
+            {% else %}
+            The number is smaller than {{ num }}
+            {% endif %}
+            {% endif %}
+            <h2>Guess the number! (between 1 and 100)</h2>
+            <br>
+            {{ form.num(size='3', autofocus=true) }}
+            <br>
+            {% for error in form.num.errors %}
+                <span>[{{ error }}]</span>
+            {% endfor %}<br>
+        </p>
+        <p><input type="submit" value="Submit" name="btn"></p>
+        {% if wrongin %}
+            <span>Whole numbers 1-100 only</span>
+            <br>
+        {% endif %}
+        Tries: {{ tries }}
+    </form>
+    <br>
+{% endblock %}
