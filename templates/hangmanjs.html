@@ -18,8 +18,19 @@
         function clearElement(obj) {while (obj.firstChild) {obj.removeChild(obj.firstChild)}};
 
         function lostGame() {
-            alert("You lost. The word was " + word + ".");
-            startgame();
+            mainimg.src="/static/hm6.jpg";
+            clearElement(textdiv);
+            var node = document.createTextNode("You lost. The word was " + word + ".");
+            textdiv.appendChild(node);
+            var node = document.createTextNode("New Game");
+            var para = document.createElement("p");
+            para.style.color = "blue";
+            para.onmouseover = function() {para.style.textDecoration='underline'};
+            para.onmouseout = function() {para.style.textDecoration='none'};
+            para.style.cursor = "pointer";
+            para.onclick = function() {startgame()};
+            para.appendChild(node);
+            textdiv.appendChild(para);
         };
 
         function wonGame() {
