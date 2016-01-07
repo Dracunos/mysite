@@ -59,6 +59,11 @@ def test():
     """.format(tt, r['personaname'], r['avatarfull'], total, round(total / 24.0, 2), total // 12)
 
 
+@app.route('/games')
+def games():
+    return render_template('games.html', ttl='Games')
+
+
 @app.route('/journey')
 def journey():
     page = request.args.get('pg', '1')
@@ -149,6 +154,13 @@ def hangedman():
 
     return render_template('hangedman.html', form=form, word=word, tried=tried,
                            missed=missed, category=category, ttl='Hangman')
+
+
+@app.route('/hangmanjs', methods=['GET', 'POST'])
+def hangmanjs():
+    with open(os.path.join(basedir, 'textdata/hmwords.txt')) as x:
+        wordlist = x.readlines()
+    return render_template('hangmanjs.html', wordlist=wordlist, ttl='Hangman')
 
 
 @app.route('/numbers', methods=['GET', 'POST'])

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block content %}
+    <div><img src="/static/hm0.jpg" height=550 width=500 alt="" id="mainimg"></div>
+    <div id="textdiv">
+    </div>
+    <script>
+        var wordlist = {{ wordlist|safe }};
+        var letters = "abcdefghijklmnopqrstuvwxyz".split("");
+        var textdiv = document.getElementById("textdiv");
+        var mainimg = document.getElementById("mainimg");
+        var missed = 0;
+        var word;
+        var picked = [];
+        var category;
+
+        function addbr(obj) {obj.appendChild(document.createElement("br"))};
+
+        function lostGame() {
+            alert("You lost. The word was " + word + ".");
+            startgame();
+        };
+
+        function wonGame() {
+            alert("You won!");
+            startgame();
+        };
+
+        function startgame() {
+            mainimg.src = "/static/hm0.jpg";
+            while (textdiv.firstChild) {textdiv.removeChild(textdiv.firstChild)};
+            missed = 0;
+            picked = [];
+            var node = document.createTextNode("New Game");
+            textdiv.appendChild(node);
+            addbr(textdiv);
+            var node = document.createTextNode("Select a category:");
+            textdiv.appendChild(node);
+            addbr(textdiv);
+            addbr(textdiv);
+
+            var table = document.createElement("table");
+            table.align = "center";
+            table.cellSpacing = 5;
+            var tabler = document.createElement("tr");
+            tabler.vAlign = "top";
+
+            var tableds = [];
+            for (i=0;i<wordlist.length;i++) {
+                (function(i) {
+                    tableds[i] = document.createElement("td");
+                    tableds[i].onclick = function() {selectCat(i)};
+                    tableds[i].align = "center";
+                    var categ = wordlist[i].split(" ")[0].toUpperCase();
+                    tableds[i].width = categ.length * 15;
+                    var extra = "";
+                    if (categ == "ANIMALS" || categ == "FOOD") {var extra = " (easy)"};
+                    var node = document.createTextNode(categ+extra);
+                    var para = document.createElement("p");
+                    para.style.color = "blue";
+                    tableds[i].onmouseover = function() {para.style.textDecoration='underline'};
+                    tableds[i].onmouseout = function() {para.style.textDecoration='none'};
+                    tableds[i].style.cursor = "pointer";
+                    para.appendChild(node);
+                    tableds[i].appendChild(para);
+                    tabler.appendChild(tableds[i]);
+                })(i)};
+            table.appendChild(tabler);
+            textdiv.appendChild(table);
+        };
+
+        function selectCat(cat) {
+            category = wordlist[cat].split(" ")[0].split("");
+            category = category[0].toUpperCase() + category.slice(1).join("");
+            var words = wordlist[cat].split(" ").slice(1);
+            word = words[Math.floor(Math.random()*words.length)];
+            drawgame();
+        };
+
+        function pickLetter(letter) {
+            var found = false;
+            var listWord = word.split("");
+            for (i=0;i<listWord.length;i++) {
+                if (letter == listWord[i]) {found = true}
+            };
+            if (found == false) {missed++};
+            picked.push(letter);
+            drawgame()
+        };
+
+        function drawgame() {
+            mainimg.src = "/static/hm" + missed + ".jpg";
+            while (textdiv.firstChild) {textdiv.removeChild(textdiv.firstChild)};
+
+            var blanks = [];
+            var listWord = word.split("");
+            var winner = true;
+            for (i=0;i<listWord.length;i++) {
+                var found = false;
+                for (q=0;q<picked.length;q++) {
+                    if (picked[q] == listWord[i]) {found = true};
+                };
+                if (found) {blanks.push(listWord[i])}
+                else {
+                    blanks.push('_');
+                    winner = false;
+                };
+            };
+
+            var table = document.createElement("table");
+            table.align = "center";
+            table.cellSpacing = 10;
+            var tabler = document.createElement("tr");
+            tabler.vAlign = "top";
+            var tableds = [];
+            for (i=0;i<blanks.length;i++) {
+                tableds[i] = document.createElement("td");
+                tableds[i].align = "center";
+                var node = document.createTextNode(blanks[i]);
+                var para = document.createElement("p");
+                para.style.fontSize = 30;
+                para.appendChild(node);
+                tableds[i].appendChild(para);
+                tabler.appendChild(tableds[i]);
+            };
+            table.appendChild(tabler);
+            textdiv.appendChild(table);
+            addbr(textdiv);
+            var node = document.createTextNode("Category: " + category);
+            textdiv.appendChild(node);
+
+            addbr(textdiv);
+            var node = document.createTextNode("Select a letter:");
+            textdiv.appendChild(node);
+            addbr(textdiv);
+
+            var left = [];
+            for (i=0;i<letters.length;i++) {
+                var found = false;
+                for (q=0;q<picked.length;q++) {
+                    if (letters[i] == picked[q]) {found = true};
+                };
+                if (found == false) {left.push(letters[i])}
+            };
+
+            var table = document.createElement("table");
+            table.align = "center";
+            table.cellSpacing = 10;
+            var tabler = document.createElement("tr");
+            tabler.vAlign = "top";
+            var tableds = [];
+            for (i=0;i<left.length;i++) {
+                (function(i) {
+                    tableds[i] = document.createElement("td");
+                    tableds[i].onclick = function() {pickLetter(left[i])};
+                    tableds[i].align = "center";
+                    var node = document.createTextNode(left[i].toUpperCase());
+                    var para = document.createElement("p");
+                    para.style.color = "blue";
+                    tableds[i].onmouseover = function() {para.style.textDecoration='underline'};
+                    tableds[i].onmouseout = function() {para.style.textDecoration='none'};
+                    tableds[i].style.cursor = "pointer";
+                    para.appendChild(node);
+                    tableds[i].appendChild(para);
+                    tabler.appendChild(tableds[i]);
+                })(i)};
+            table.appendChild(tabler);
+            textdiv.appendChild(table);
+
+            if (missed >= 6) {lostGame()}
+            else if (winner) {wonGame()};
+        }
+
+        startgame();
+    </script>
+{% endblock %}
