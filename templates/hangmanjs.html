@@ -15,19 +15,32 @@
 
         function addbr(obj) {obj.appendChild(document.createElement("br"))};
 
+        function clearElement(obj) {while (obj.firstChild) {obj.removeChild(obj.firstChild)}};
+
         function lostGame() {
             alert("You lost. The word was " + word + ".");
             startgame();
         };
 
         function wonGame() {
-            alert("You won!");
-            startgame();
+            mainimg.src="/static/hmw.jpg";
+            clearElement(textdiv);
+            var node = document.createTextNode("You won! The word was " + word + ".");
+            textdiv.appendChild(node);
+            var node = document.createTextNode("New Game");
+            var para = document.createElement("p");
+            para.style.color = "blue";
+            para.onmouseover = function() {para.style.textDecoration='underline'};
+            para.onmouseout = function() {para.style.textDecoration='none'};
+            para.style.cursor = "pointer";
+            para.onclick = function() {startgame()};
+            para.appendChild(node);
+            textdiv.appendChild(para);
         };
 
         function startgame() {
             mainimg.src = "/static/hm0.jpg";
-            while (textdiv.firstChild) {textdiv.removeChild(textdiv.firstChild)};
+            clearElement(textdiv);
             missed = 0;
             picked = [];
             var node = document.createTextNode("New Game");
@@ -89,7 +102,7 @@
 
         function drawgame() {
             mainimg.src = "/static/hm" + missed + ".jpg";
-            while (textdiv.firstChild) {textdiv.removeChild(textdiv.firstChild)};
+            clearElement(textdiv);
 
             var blanks = [];
             var listWord = word.split("");
