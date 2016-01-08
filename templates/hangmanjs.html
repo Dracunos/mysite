@@ -17,6 +17,48 @@
 
         function clearElement(obj) {while (obj.firstChild) {obj.removeChild(obj.firstChild)}};
 
+        function setCookie(cookiename, cookievalue) {
+            var dt = new Date();
+            dt.setFullYear(dt.getFullYear() + 1);
+            document.cookie = cookiename + "=" + cookievalue + ";expires=" + dt
+        };
+
+        function saveGame() {
+            setCookie("missed", missed);
+            setCookie("word", word);
+            setCookie("picked", picked.join(','));
+            setCookie("category", category);
+        };
+
+        function eraseSave() {
+            removeCookie("missed");
+            removeCookie("word");
+            removeCookie("picked");
+            removeCookie("category");
+        }
+
+        function resumeGame() {
+            missed = getCookie("missed");
+            word = getCookie("word");
+            picked = getCookie("picked").split(",");
+            category = getCookie("category")
+            drawgame()
+        };
+
+        function getCookie(cookiename) {
+            var cookie = document.cookie.split("; ");
+            for (i=0;i<cookie.length;i++) {
+                var cooki = cookie[i].split("=")
+                if (cooki[0] == cookiename) {
+                    if (cooki.length == 2){return cooki[1]}
+                    else {return ""};
+                }
+        }};
+
+        function removeCookie(cookiename) {
+            document.cookie = cookiename + "=;expires=January 1, 2015 00:00:00"
+        }
+
         function lostGame() {
             mainimg.src="/static/hm6.jpg";
             clearElement(textdiv);
@@ -31,6 +73,7 @@
             para.onclick = function() {startgame()};
             para.appendChild(node);
             textdiv.appendChild(para);
+            eraseSave()
         };
 
         function wonGame() {
@@ -47,6 +90,7 @@
             para.onclick = function() {startgame()};
             para.appendChild(node);
             textdiv.appendChild(para);
+            eraseSave()
         };
 
         function startgame() {
@@ -65,6 +109,7 @@
             var table = document.createElement("table");
             table.align = "center";
             table.cellSpacing = 5;
+            var tbody = document.createElement("tbody");
             var tabler = document.createElement("tr");
             tabler.vAlign = "top";
 
@@ -88,7 +133,8 @@
                     tableds[i].appendChild(para);
                     tabler.appendChild(tableds[i]);
                 })(i)};
-            table.appendChild(tabler);
+            table.appendChild(tbody);
+            tbody.appendChild(tabler)
             textdiv.appendChild(table);
         };
 
@@ -97,6 +143,7 @@
             category = category[0].toUpperCase() + category.slice(1).join("");
             var words = wordlist[cat].split(" ").slice(1);
             word = words[Math.floor(Math.random()*words.length)];
+            saveGame();
             drawgame();
         };
 
@@ -108,6 +155,7 @@
             };
             if (found == false) {missed++};
             picked.push(letter);
+            saveGame();
             drawgame()
         };
 
@@ -133,6 +181,7 @@
             var table = document.createElement("table");
             table.align = "center";
             table.cellSpacing = 10;
+            var tbody = document.createElement("tbody");
             var tabler = document.createElement("tr");
             tabler.vAlign = "top";
             var tableds = [];
@@ -146,7 +195,8 @@
                 tableds[i].appendChild(para);
                 tabler.appendChild(tableds[i]);
             };
-            table.appendChild(tabler);
+            table.appendChild(tbody);
+            tbody.appendChild(tabler);
             textdiv.appendChild(table);
             addbr(textdiv);
             var node = document.createTextNode("Category: " + category);
@@ -169,6 +219,7 @@
             var table = document.createElement("table");
             table.align = "center";
             table.cellSpacing = 10;
+            var tbody = document.createElement("tbody");
             var tabler = document.createElement("tr");
             tabler.vAlign = "top";
             var tableds = [];
@@ -187,13 +238,19 @@
                     tableds[i].appendChild(para);
                     tabler.appendChild(tableds[i]);
                 })(i)};
-            table.appendChild(tabler);
+            table.appendChild(tbody);
+            tbody.appendChild(tabler);
             textdiv.appendChild(table);
 
             if (missed >= 6) {lostGame()}
             else if (winner) {wonGame()};
+        };
+        var cookie = document.cookie.split("; ");
+        var foundword = false
+        for (i=0;i<cookie.length;i++) {
+            if (cookie[i].split("=")[0] == "word") {foundword = true}
         }
-
-        startgame();
+        if (foundword) {resumeGame()}
+        else {startgame()};
     </script>
 {% endblock %}
