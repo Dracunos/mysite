@@ -9,7 +9,6 @@
         {% endif %}
         <style>
         h1 {
-            text-align: center;
             color: black
         }
         body {
@@ -31,8 +30,11 @@
         </style>
     </head>
     <body>
-        <h1>MySite</h1>
-        <a href="/">Home</a> - <a href="/games">Games</a> - <a href="/test">Test</a> - <a href="/membersarea">Members</a><hr>
+        <header id="navbar"><h1>MySite</h1>
+        <a href="/">Home</a> - <a href="/games">Games</a> - <a href="/test">Test</a> - <a href="/membersarea">Members</a>
+        <hr></header>
+        <div id="main">
         {% block content %}{% endblock %}
+        </div>
     </body>
 </html>
