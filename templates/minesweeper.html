@@ -46,7 +46,7 @@
         }};
 
         function removeCookie(cookiename) {
-            document.cookie = cookiename + "=;expires=January 1, 2015 00:00:00"
+            document.cookie = cookiename + "=;expires=January 1, 1970 00:00:00"
         }
 
         submitfield.onclick = function() {
@@ -124,14 +124,16 @@
                             var char = gamefield[i][q];
                             var tabled = document.createElement("td");
                             if (char == "." || char == "*") {
-                                tabled.onclick = function(){alert('Blah.' + i + q)};
+                                tabled.onclick = function(){selectCell(i, q)};
+                                tabled.style.backgroundColor="grey";
                             } else {
-                                tabled.onclick = function(){alert('B.')};
-                                var node = document.createTextNode(char);
-                                tabled.appendChild(node);
+                                if (char != "0") {
+                                    var node = document.createTextNode(char);
+                                    tabled.appendChild(node);
+                                }
+                                tabled.style.backgroundColor="white";
                             };
                             tabled.style.width="30px";
-                            tabled.style.backgroundColor="grey";
                             tabled.style.textAlign="center";
                             tabler.appendChild(tabled);
                         })(q)
@@ -143,6 +145,12 @@
             table.appendChild(tbody);
             gamediv.appendChild(table);
         };
+        
+        function selectCell(x, y) {
+            var value = gamefield[x][y];
+            var count = 0;
+            if (x - 1 > 0 && y - 1 > ) {}
+        }
 
         function resumeGame() {
             gamefield = unstringify(getCookie("field"));
