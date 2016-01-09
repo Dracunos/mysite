@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-    <div style="width:10%;float:left;"></div>
-    <div id="newgame" style="text-align:right;width:10%;float:right;">
-        <label for="size">Size: </label>
+    <div style="width:10%;float:left;height:20%;"></div>
+    <div id="newgame" style="text-align:right;width:10%;float:right;height:20%;">
+        <label for="sizefield">Size: </label>
         <input type="text" name="fieldsize" size=2 id="sizefield" value="20">
         <br>
-        <label for="mines">Mines: </label>
+        <label for="minefield">Mines: </label>
         <input type="text" name="minefield" size=2 id="minefield" value="30">
         <br>
         <input type="submit" name="submit" id="submit" value="New Game">
     </div>
-    <div id="gamediv" style="width:100%;">
-        Blah
+    <div id="gamediv" style="width:100%;margin-left:auto;margin-right:auto;">
+        Select a new game.<br>
+        The size must be between 2 and 50.<br>
+        Number of mines must be between 1 and the size squared.
     </div>
     <script>
         var gamediv = document.getElementById("gamediv");
