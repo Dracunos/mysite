@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+    <div style="width:10%;float:left;"></div>
+    <div id="newgame" style="text-align:right;width:10%;float:right;">
+        <label for="size">Size: </label>
+        <input type="text" name="fieldsize" size=2 id="sizefield" value="20">
+        <br>
+        <label for="mines">Mines: </label>
+        <input type="text" name="minefield" size=2 id="minefield" value="30">
+        <br>
+        <input type="submit" name="submit" id="submit" value="New Game">
+    </div>
+    <div id="gamediv" style="width:100%;">
+        Blah
+    </div>
+    <script>
+        var gamediv = document.getElementById("gamediv");
+        var minefield = document.getElementById("minefield");
+        minefield.value = "30";
+        var sizefield = document.getElementById("sizefield");
+        sizefield.value = "20";
+        var submitfield = document.getElementById("submit");
+        var SIZELIMIT = 51;
+        var gamefield;
+
+        function addbr(obj) {obj.appendChild(document.createElement("br"))};
+
+        function clearElement(obj) {while (obj.firstChild) {obj.removeChild(obj.firstChild)}};
+
+        function setCookie(cookiename, cookievalue) {
+            var dt = new Date();
+            dt.setFullYear(dt.getFullYear() + 1);
+            document.cookie = cookiename + "=" + cookievalue + ";expires=" + dt
+        };
+
+        function getCookie(cookiename) {
+            var cookie = document.cookie.split("; ");
+            for (i=0;i<cookie.length;i++) {
+                var cooki = cookie[i].split("=")
+                if (cooki[0] == cookiename) {
+                    if (cooki.length == 2){return cooki[1]}
+                    else {return ""};
+                }
+        }};
+
+        function removeCookie(cookiename) {
+            document.cookie = cookiename + "=;expires=January 1, 2015 00:00:00"
+        }
+
+        submitfield.onclick = function() {
+            if (minefield.value < Math.pow(sizefield.value, 2)
+                && minefield.value > 0
+                && sizefield.value > 1
+                && sizefield.value < SIZELIMIT) {
+                    startGame();
+                }
+            else {alert("0 < Mines < size^2; 1 < Size < " + SIZELIMIT)}
+        };
+
+        function stringify(arr) {
+            var s = [];
+            for (i=0;i<arr.length;i++) {
+                s.push(arr[i].join(""))
+            };
+            return s.join(",")
+        };
+
+        function unstringify(arr) {
+            var a = arr.split(",");
+            for (i=0;i<a.length;i++) {
+                a[i] = a[i].split("");
+            };
+            return a
+        };
+
+        function saveGame() {
+            var s = stringify(gamefield);
+            setCookie("field", s);
+        };
+
+        function setMines(arr, minecount) {
+            var s = stringify(arr);
+            var s = s.split("");
+            while (minecount > 0) {
+                var rand = Math.floor(Math.random()*s.length);
+                if (s[rand] != "," && s[rand] != "*") {
+                    s[rand] = "*";
+                    minecount--
+                };
+            };
+            s = s.join("");
+            return unstringify(s)
+        };
+
+        function startGame() {
+            var size = sizefield.value;
+            var minecount = minefield.value;
+            gamefield = [];
+            for (i=0;i<size;i++) {
+                var subfield = [];
+                for (q=0;q<size;q++) {
+                    subfield.push(".");
+                };
+                gamefield[i] = subfield;
+            };
+            gamefield = setMines(gamefield, minecount);
+            saveGame();
+            drawGame();
+        };
+
+        function drawGame() {
+            clearElement(gamediv);
+            var table = document.createElement("table");
+            table.style.marginLeft="auto";
+            table.style.marginRight="auto";
+            var tbody = document.createElement("tbody");
+            for (i=0;i<gamefield.length;i++) {
+                (function(i) {
+                    var tabler = document.createElement("tr");
+                    for (q=0;q<gamefield.length;q++) {
+                        (function(q) {
+                            var char = gamefield[i][q];
+                            var tabled = document.createElement("td");
+                            if (char == "." || char == "*") {
+                                tabled.onclick = function(){alert('Blah.' + i + q)};
+                            } else {
+                                tabled.onclick = function(){alert('B.')};
+                                var node = document.createTextNode(char);
+                                tabled.appendChild(node);
+                            };
+                            tabled.style.width="30px";
+                            tabled.style.backgroundColor="grey";
+                            tabled.style.textAlign="center";
+                            tabler.appendChild(tabled);
+                        })(q)
+                    };
+                    tbody.appendChild(tabler);
+                    tabler.style.height="30px";
+                })(i)
+            };
+            table.appendChild(tbody);
+            gamediv.appendChild(table);
+        };
+
+        function resumeGame() {
+            gamefield = unstringify(getCookie("field"));
+            drawGame()
+        };
+    </script>
+{% endblock %}

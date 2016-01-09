@@ -210,6 +210,11 @@ def numbers():
                            tries = tries)
 
 
+@app.route('/minesweeper')
+def minesweeper():
+    return render_template('minesweeper.html', ttl='Minesweeper')
+
+
 @app.route('/membersarea')
 @login_required
 def members_area():
