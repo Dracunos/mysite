@@ -19,6 +19,8 @@
         var SIZELIMIT = 51;
         var DEFAULTMINES = 15;
         var DEFAULTSIZE = 10;
+        var body = document.getElementById("body");
+        body.oncontextmenu=function(){return false};
         var gamediv = document.getElementById("gamediv");
         var minefield = document.getElementById("minefield");
         minefield.value = DEFAULTMINES;
@@ -146,6 +148,9 @@
                                     onClick(i, q);
                                 };
                                 tabled.style.backgroundColor="grey";
+                                tabled.oncontextmenu = function() {
+                                    onClick(i, q, true);
+                                };
                                 if (lost) {
                                     tabled.onclick = function(){return true;};
                                     if (char == "*") {
@@ -165,6 +170,9 @@
                             else if (char == "+" || char == "_") {
                                 tabled.onclick = function(){
                                     unFlag(i, q);
+                                };
+                                tabled.oncontextmenu = function() {
+                                    unFlag(i, q, true);
                                 };
                                 tabled.style.backgroundColor="blue";
                             }
@@ -191,8 +199,8 @@
             else {gamediv.appendChild(checkbox);};
         };
 
-        function onClick(i, q) {
-            if (flagging) {
+        function onClick(i, q, rclick) {
+            if (flagging || rclick) {
                 var char = gamefield[i][q];
                 if (char == "*") {gamefield[i][q] = "+"}
                 else {gamefield[i][q] = "_"};
@@ -205,8 +213,8 @@
             };
         };
 
-        function unFlag(i, q) {
-            if (flagging) {
+        function unFlag(i, q, rclick) {
+            if (flagging || rclick) {
                 var char = gamefield[i][q];
                 if (char == "+") {gamefield[i][q] = "*"}
                 else {gamefield[i][q] = "."};
