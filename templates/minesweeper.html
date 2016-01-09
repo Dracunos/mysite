@@ -3,10 +3,10 @@
     <div style="width:10%;float:left;height:20%;"></div>
     <div id="newgame" style="text-align:right;width:10%;float:right;height:20%;">
         <label for="sizefield">Size: </label>
-        <input type="text" name="fieldsize" size=2 id="sizefield" value="20">
+        <input type="text" name="fieldsize" size=2 id="sizefield">
         <br>
         <label for="minefield">Mines: </label>
-        <input type="text" name="minefield" size=2 id="minefield" value="30">
+        <input type="text" name="minefield" size=2 id="minefield">
         <br>
         <input type="submit" name="submit" id="submit" value="New Game">
     </div>
@@ -16,14 +16,23 @@
         Number of mines must be between 1 and the size squared.
     </div>
     <script>
+        var SIZELIMIT = 51;
+        var DEFAULTMINES = 15;
+        var DEFAULTSIZE = 10;
         var gamediv = document.getElementById("gamediv");
         var minefield = document.getElementById("minefield");
-        minefield.value = "30";
+        minefield.value = DEFAULTMINES;
         var sizefield = document.getElementById("sizefield");
-        sizefield.value = "20";
+        sizefield.value = DEFAULTSIZE;
         var submitfield = document.getElementById("submit");
-        var SIZELIMIT = 51;
         var gamefield;
+        var pointstocheck = [];
+        var checkbox = document.createElement("input");
+        checkbox.setAttribute("type", "checkbox");
+        checkbox.onchange = function() {flagging = checkbox.checked};
+        var flagging = false;
+        var won = false;
+        var lost = false;
 
         function addbr(obj) {obj.appendChild(document.createElement("br"))};
 
@@ -95,6 +104,8 @@
         };
 
         function startGame() {
+            won = false;
+            lost = false;
             var size = sizefield.value;
             var minecount = minefield.value;
             gamefield = [];
@@ -112,6 +123,13 @@
 
         function drawGame() {
             clearElement(gamediv);
+            while (pointstocheck.length > 0) {
+                var checkpoint = pointstocheck.pop();
+                if (gamefield[checkpoint[0]][checkpoint[1]] == "." || gamefield[checkpoint[0]][checkpoint[1]] == "="){
+                    selectCell(checkpoint[0], checkpoint[1]);
+                };
+            };
+            won = checkWon();
             var table = document.createElement("table");
             table.style.marginLeft="auto";
             table.style.marginRight="auto";
@@ -124,9 +142,33 @@
                             var char = gamefield[i][q];
                             var tabled = document.createElement("td");
                             if (char == "." || char == "*") {
-                                tabled.onclick = function(){selectCell(i, q)};
+                                tabled.onclick = function(){
+                                    onClick(i, q);
+                                };
                                 tabled.style.backgroundColor="grey";
-                            } else {
+                                if (lost) {
+                                    tabled.onclick = function(){return true;};
+                                    if (char == "*") {
+                                        tabled.style.backgroundColor="red";
+                                        var node = document.createTextNode(char);
+                                        tabled.appendChild(node);
+                                    };
+                                };
+                                if (won) {
+                                    tabled.onclick = function(){return true;};
+                                    tabled.style.backgroundColor="green";
+                                    var node = document.createTextNode(char);
+                                    tabled.appendChild(node);
+                                };
+
+                            }
+                            else if (char == "+" || char == "_") {
+                                tabled.onclick = function(){
+                                    unFlag(i, q);
+                                };
+                                tabled.style.backgroundColor="blue";
+                            }
+                            else {
                                 if (char != "0") {
                                     var node = document.createTextNode(char);
                                     tabled.appendChild(node);
@@ -144,17 +186,104 @@
             };
             table.appendChild(tbody);
             gamediv.appendChild(table);
+            if (won) {alert("Congratulations! You won!")}
+            else if (lost) {return true;}
+            else {gamediv.appendChild(checkbox);};
         };
-        
+
+        function onClick(i, q) {
+            if (flagging) {
+                var char = gamefield[i][q];
+                if (char == "*") {gamefield[i][q] = "+"}
+                else {gamefield[i][q] = "_"};
+                saveGame();
+                drawGame();
+            }
+            else {
+                selectCell(i, q);
+                drawGame();
+            };
+        };
+
+        function unFlag(i, q) {
+            if (flagging) {
+                var char = gamefield[i][q];
+                if (char == "+") {gamefield[i][q] = "*"}
+                else {gamefield[i][q] = "."};
+                saveGame();
+                drawGame();
+            }
+        };
+
         function selectCell(x, y) {
+            if (x < 0 || y < 0 || x >= gamefield.length || y >= gamefield.length) {
+                return false
+            };
             var value = gamefield[x][y];
+            if (value == "*") {
+                lost = true;
+                removeCookie("field");
+                return
+            };
+            var points = [[x-1, y-1], [x-1, y],[x-1, y+1],[x, y-1],
+                [x, y+1], [x+1, y-1], [x+1, y], [x+1, y+1]];
+            for (i=0;i<points.length;i++) {
+                var x1 = points[i][0]
+                var y1 = points[i][1]
+                if (x1 < 0 || y1 < 0 || x1 >= gamefield.length || y1 >= gamefield.length) {
+                    points[i] = "c";
+                    continue;
+                };
+                var q = gamefield[x][y];
+                if (q != "*" && q != "." && q != "+" && q != "_") {points[i] = "c"};
+            };
+
             var count = 0;
-            if (x - 1 > 0 && y - 1 > ) {}
-        }
+            for (i=0;i<points.length;i++) {
+                if (points[i] == "c") {continue};
+                count = count + checkCell(points[i][0], points[i][1]);
+            };
+            gamefield[x][y] = count;
+            saveGame();
+            if (count == 0) {
+                for (i=0;i<points.length;i++) {
+                    if (points[i] == "c") {continue};
+                    pointstocheck[pointstocheck.length] = [points[i][0], points[i][1]];
+                };
+            };
+        };
+
+        function checkCell(x, y) {
+            if (x < 0 || y < 0 || x >= gamefield.length || y >= gamefield.length) {
+                return 0
+            };
+            if (gamefield[x][y] == "*" || gamefield[x][y] == "+") {return 1};
+            return 0;
+        };
+
+        function checkWon() {
+            var result = true
+            for (i=0;i<gamefield.length;i++) {
+                for (q=0;q<gamefield.length;q++) {
+                    if (gamefield[i][q] == "." || gamefield[i][q] == "_") {
+                        result = false;
+                    };
+                };
+            };
+            return result;
+        };
 
         function resumeGame() {
             gamefield = unstringify(getCookie("field"));
             drawGame()
         };
+
+        var cookie = document.cookie.split("; ");
+        var found = false
+        for (i=0;i<cookie.length;i++) {
+            cooki = cookie[i].split("=");
+            if (cooki[0] == "field" && cooki.length > 1 && cooki[1].length > 3) {found = true}
+        }
+        if (found) {resumeGame()}
     </script>
 {% endblock %}
