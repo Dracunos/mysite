@@ -215,6 +215,11 @@ def minesweeper():
     return render_template('minesweeper.html', ttl='Minesweeper')
 
 
+@app.route('/breakout')
+def breakout():
+    return render_template('breakout.html', ttl='Breakout')
+
+
 @app.route('/membersarea')
 @login_required
 def members_area():
