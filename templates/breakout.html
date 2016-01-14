@@ -7,47 +7,142 @@
     <script>
         var canvas = document.getElementById("myCanvas");
         var ctx = canvas.getContext("2d");
-        var items = [];
+        var blocks = [];
         var mousepos;
-
-        function item(x, y, w, h, vector, creator) {
-            this.x = x;
-            this.y = y;
-            this.width = w;
-            this.height = h;
-            this.vector = vector;
-            this.creator = function() {creator(this.x, this.y, this.width, this.height)};
-            items.push(this);
-        };
+        var paddle;
+        var balls = [];
 
         function drawGame() {
             updatePhysics();
             updatePaddle();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (i=0;i<items.length;i++) {
-                items[i].creator()
+            for (i=0;i<blocks.length;i++) {
+                blocks[i].creator()
+            };
+            paddle.creator();
+            for (i=0;i<balls.length;i++) {
+                balls[i].creator()
             };
             setTimeout(drawGame, 5);
         };
 
         function updatePhysics() {
-            for (i=0;i<items.length;i++) {
-                var vector = items[i].vector;
-                items[i].x = items[i].x + vector[0];
-                items[i].y = items[i].y + vector[1];
-                checkCollision(items[i]);
+            for (i=0;i<blocks.length;i++) {
+                var vector = blocks[i].vector;
+                blocks[i].x = blocks[i].x + vector[0];
+                blocks[i].y = blocks[i].y + vector[1];
+            };
+            for (i=0;i<balls.length;i++) {
+                var vector = balls[i].vector;
+                balls[i].x = balls[i].x + vector[0];
+                balls[i].y = balls[i].y + vector[1];
+                checkCollision(balls[i]);
             };
         };
 
         function updatePaddle() {
-            paddle.x = mousepos? mousepos.x - (paddle.width/2) : paddle.x
+            paddle.x = mousepos? mousepos.x - (paddle.width/2) : paddle.x;
         };
 
         function checkCollision(obj) {
-            if (obj.x <= 0) {obj.vector = [Math.abs(obj.vector[0]), obj.vector[1]];};
-            if (obj.y <= 0) {obj.vector = [obj.vector[0], Math.abs(obj.vector[1])]};
-            if (obj.y + obj.height >= canvas.height) {obj.vector = [obj.vector[0], -obj.vector[1]]};
-            if (obj.x + obj.width >= canvas.width) {obj.vector = [-obj.vector[0], obj.vector[1]]};
+            if (obj.x - obj.radius <= 0) {obj.vector = [Math.abs(obj.vector[0]), obj.vector[1]];};
+            if (obj.y - obj.radius <= 0) {obj.vector = [obj.vector[0], Math.abs(obj.vector[1])]};
+            if (obj.y + obj.radius >= canvas.height) {obj.vector = [obj.vector[0], -obj.vector[1]]};
+            if (obj.x + obj.radius >= canvas.width) {obj.vector = [-obj.vector[0], obj.vector[1]]};
+            if (obj.y > paddle.y - obj.radius && obj.y < paddle.y) {
+                if (obj.x + obj.radius / 2 > paddle.x && obj.x - obj.radius / 2 < paddle.x + paddle.width) {
+                    var vector = obj.vector;
+                    obj.vector = [vector[0], -(Math.abs(vector[1]))];
+                };
+            };
+            for (i=0;i<blocks.length;i++) {
+                if (checkClose(obj, blocks[i])) {
+                    var quad = checkQuadrant(obj, blocks[i]);
+                    if (checkHit(obj, blocks[i], quad)) {
+                        blocks.splice(i, 1);
+                        bounce(obj, quad);
+                        break;
+                    };
+                };
+            };
+        };
+
+        function checkHit(obj, block, quadrant) {
+            if (quadrant == "top" || quadrant == "bottom") {
+                var y = quadrant == "top" ? block.y : block.y + block.height;
+                for (x=block.x;x<block.x + block.width;x++) {
+                    if (checkDistance(x, y, obj.x, obj.y) <= obj.radius) {
+                        return true
+                    };
+                };
+            } else {
+                var x = quadrant == "left" ? block.x : block.x + block.width;
+                for (y=block.y;y<block.y + block.height;y++) {
+                    if (checkDistance(x, y, obj.x, obj.y) <= obj.radius) {
+                        return true
+                    };
+                };
+            };
+            return false;
+        };
+
+        function bounce (obj, quadrant) {
+            var vector = obj.vector;
+            if (quadrant == "bottom") {
+                obj.vector = [vector[0], Math.abs(vector[1])];
+            } else if (quadrant == "top") {
+                obj.vector = [vector[0], -Math.abs(vector[1])];
+            } else if (quadrant == "right") {
+                obj.vector = [Math.abs(vector[0]), vector[1]];
+            } else {
+                obj.vector = [-Math.abs(vector[0]), vector[1]];
+            };
+        };
+
+        function checkClose(ball, block) {
+            blockcenter = [block.x + block.width / 2, block.y + block.height / 2];
+            centertoedge = checkDistance(block.x, block.y, blockcenter[0], blockcenter[1]);
+            if (checkDistance(ball.x, ball.y, blockcenter[0], blockcenter[1]) < centertoedge + ball.radius) {
+                return true
+            };
+            return false
+        };
+
+        function checkDistance(x1, y1, x2, y2) {
+            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        };
+
+        function checkQuadrant(ball, block) {
+            var top = block.y;
+            var bottom = block.y + block.height;
+            var left = block.x;
+            var right = block.x + block.width;
+            if (ball.y > bottom && ball.x < block.x + block.width / 2) { // bottom left side
+                var b = left + bottom;
+                if (ball.y > -1 * ball.x + b) {return "bottom"}; // check line y > -1*x + b
+                return "left";
+            }
+            else if (ball.y > bottom) { // bottom right side
+                var b = bottom - right;
+                if (ball.y < ball.x + b) {return "right"}; // check line y > x + b
+                return "bottom";
+            }
+            else if (ball.y < top && ball.x < block.x + block.width / 2) { // top left side
+                var b = top - left;
+                if (ball.y > ball.x + b) {return "left"};
+                return "top";
+            }
+            else if (ball.y < top) { // top right side
+                var b = top + right;
+                if (ball.y < -1 * ball.x + b) {return "top"};
+                return "right"
+            }
+            else if (ball.x > right) { // right side
+                return "right"
+            }
+            else if (ball.x < left) { // left side
+                return "left"
+            };
         };
 
         function getPosition(e) {
@@ -78,6 +173,25 @@
             mousepos = getPosition(event);
         });
 
+        function rect(x, y, w, h, vector, creator, ispaddle) {
+            this.x = x;
+            this.y = y;
+            this.width = w;
+            this.height = h;
+            this.vector = vector;
+            this.creator = function() {creator(this.x, this.y, this.width, this.height)};
+            if (!ispaddle) {blocks.push(this);};
+        };
+
+        function circle(x, y, r, vector, creator) {
+            this.x = x;
+            this.y = y;
+            this.radius = r;
+            this.vector = vector;
+            this.creator = function() {creator(this.x, this.y, this.radius)};
+            balls.push(this);
+        };
+
         var redRect = function(x, y, w, h) {
             ctx.fillStyle = "red";
             ctx.fillRect(x, y, w, h);
@@ -88,20 +202,24 @@
             ctx.fillRect(x, y, w, h);
         };
 
-        var yellowBall = function(x, y, w, h) {
+        var yellowBall = function(x, y, r) {
             ctx.beginPath();
             ctx.fillStyle = "yellow";
-            ctx.arc(x, y, w, 0, 2 * Math.PI);
+            ctx.arc(x, y, r, 0, 2 * Math.PI);
             ctx.fill()
         };
 
         for (i=1;i<21;i++) {
-            var block = new item(50 + (i * 41), 50, 40, 20, [0, 0], redRect);
+            var block = new rect(50 + (i * 41), 50, 40, 20, [0, 0], redRect);
         };
 
-        var paddle = new item(400, 600, 100, 30, [0, 0], blueRect);
+        for (i=1;i<10;i++) {
+            var block = new rect(Math.round(Math.random() * 600), Math.round(Math.random() * 600), 40, 20, [0, 0], redRect);
+        };
 
-        var ball = new item(200, 400, 20, 5, [0.5, 0.5], yellowBall);
+        paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
+
+        var ball = new circle(200, 400, 20, [1, 1], yellowBall);
 
         drawGame();
     </script>
