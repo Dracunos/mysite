@@ -11,6 +11,7 @@
         var mousepos;
         var paddle;
         var balls = [];
+        var maxspeed = 4;
 
         function drawGame() {
             updatePhysics();
@@ -47,14 +48,19 @@
         function checkCollision(obj) {
             if (obj.x - obj.radius <= 0) {obj.vector = [Math.abs(obj.vector[0]), obj.vector[1]];}; // wall collisions
             if (obj.y - obj.radius <= 0) {obj.vector = [obj.vector[0], Math.abs(obj.vector[1])]};
-            if (obj.y + obj.radius >= canvas.height) {obj.vector = [obj.vector[0], -obj.vector[1]]};
-            if (obj.x + obj.radius >= canvas.width) {obj.vector = [-obj.vector[0], obj.vector[1]]};
+            if (obj.y + obj.radius >= canvas.height) {obj.vector = [obj.vector[0], -Math.abs(obj.vector[1])]};
+            if (obj.x + obj.radius >= canvas.width) {obj.vector = [-Math.abs(obj.vector[0]), obj.vector[1]]};
+
             if (obj.y > paddle.y - obj.radius && obj.y < paddle.y) { // paddle collision
-                if (obj.x + obj.radius / 2 > paddle.x && obj.x - obj.radius / 2 < paddle.x + paddle.width) {
+                if (obj.vector[1] > 0 && obj.x + obj.radius / 2 > paddle.x && obj.x - obj.radius / 2 < paddle.x + paddle.width) {
                     var vector = obj.vector;
-                    obj.vector = [vector[0], -(Math.abs(vector[1]))];
+                    var angle = (paddle.x + paddle.width / 2) - obj.x;
+                    if (Math.abs(angle) < 15) {angle = 0};
+                    var yvector = vector[1] < maxspeed? -(vector[1] + 0.2) : -vector[1];
+                    obj.vector = [vector[0] - angle / 30, yvector];
                 };
             };
+
             for (i=0;i<blocks.length;i++) { // block collision
                 if (checkClose(obj, blocks[i])) {
                     var quad = checkQuadrant(obj, blocks[i]);
@@ -145,7 +151,7 @@
             };
         };
 
-        function getPosition(e) {
+        function getPosition(e, istouch) {
 
             //this section is from http://www.quirksmode.org/js/events_properties.html
             var targ;
@@ -157,6 +163,10 @@
                 targ = e.srcElement;
             if (targ.nodeType == 3) // defeat Safari bug
                 targ = targ.parentNode;
+
+            if (istouch) {
+                e = e.changedTouches[0];
+            };
 
             // jQuery normalizes the pageX and pageY
             // pageX,Y are the mouse positions relative to the document
@@ -172,6 +182,9 @@
             // jQuery would normalize the event
             mousepos = getPosition(event);
         });
+        canvas.ontouchmove = function (event) {
+            mousepos = getPosition(event, true);
+        };
 
         function rect(x, y, w, h, vector, creator, ispaddle) {
             this.x = x;
@@ -213,9 +226,9 @@
             var block = new rect(50 + (i * 41), 50, 40, 20, [0, 0], redRect);
         };
 
-        //for (i=1;i<10;i++) {
-        //    var block = new rect(Math.round(Math.random() * 600), Math.round(Math.random() * 600), 40, 20, [0, 0], redRect);
-        //};
+        for (i=1;i<20;i++) {
+            var block = new rect(Math.round(Math.random() * 600), Math.round(Math.random() * 600), 40, 20, [0, 0], redRect);
+        };
 
         paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
 
