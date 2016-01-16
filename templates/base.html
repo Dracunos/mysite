@@ -1,21 +1,24 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
-        </script>
         {% if ttl %}
         <title>{{ ttl }}</title>
         {% else %}
         <title>Welcome</title>
         {% endif %}
         <style>
+        html {
+           height: 90%;
+        }
         #main {
-            padding-top: 0
+            padding-top: 0;
+            height:80%;
         }
         h1 {
             color: black
         }
         body {
+            height: 100%;
             text-align: center;
             background-color: #FFFAFF;
         }

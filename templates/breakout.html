@@ -5,38 +5,101 @@
         </canvas>
     </div>
     <script>
+        (function() {
+            var lastTime = 0;
+            var vendors = ['webkit', 'moz'];
+            for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+                window.cancelAnimationFrame =
+                window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+            }
+
+            if (!window.requestAnimationFrame)
+                window.requestAnimationFrame = function(callback, element) {
+                    var currTime = new Date().getTime();
+                    var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                    var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+                    timeToCall);
+                    lastTime = currTime + timeToCall;
+                    return id;
+                };
+
+            if (!window.cancelAnimationFrame)
+                window.cancelAnimationFrame = function(id) {
+                    clearTimeout(id);
+                };
+        }());
+
+
         var canvas = document.getElementById("myCanvas");
         var ctx = canvas.getContext("2d");
         var blocks = [];
         var mousepos;
         var paddle;
         var balls = [];
-        var maxspeed = 4;
+        var queueballs = [];
+        var maxspeed = 16;
+        var lasttime;
+        var pause = false;
 
-        function drawGame() {
-            updatePhysics();
-            updatePaddle();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (i=0;i<blocks.length;i++) {
-                blocks[i].creator()
-            };
-            paddle.creator();
-            for (i=0;i<balls.length;i++) {
-                balls[i].creator()
-            };
-            setTimeout(drawGame, 5);
+        window.onblur = function() {pause = true;};
+        window.onfocus = function() {
+            lasttime = null; // prevent physics bugs on refocus
+            pause = false;
         };
 
-        function updatePhysics() {
-            for (i=0;i<blocks.length;i++) {
+        function animate(time) {
+            var timedif;
+            if (!lasttime) {
+                lasttime = time;
+                timedif = 1;
+            } else {
+                timedif = (time - lasttime) / 20;
+                lasttime = time;
+                if (timedif > 4) {timedif = 1}; // trying to prevent lag from killing the physics
+            };
+            requestAnimationFrame(animate);
+            drawGame(timedif);
+        };
+
+        function drawGame(time) {
+            updatePhysics(time);
+            updatePaddle();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (var i=0;i<blocks.length;i++) {
+                blocks[i].creator();
+            };
+            paddle.creator();
+            if (queueballs.length > 0) {
+                var qball = queueballs[queueballs.length - 1]
+                qball.x = paddle.x + paddle.width / 2;
+                qball.y = paddle.y - qball.radius;
+                qball.vector = [0, 0];
+                qball.creator();
+            };
+            for (var i=0;i<balls.length;i++) {
+                balls[i].creator();
+            };
+        };
+
+        function mouseClick() {
+            if (queueballs.length > 0) {
+                balls.push(queueballs.pop());
+                balls[balls.length - 1].vector = [4, -4];
+            };
+        };
+
+        function updatePhysics(time) {
+            if (pause) {return;};
+            for (var i=0;i<blocks.length;i++) {
                 var vector = blocks[i].vector;
                 blocks[i].x = blocks[i].x + vector[0];
                 blocks[i].y = blocks[i].y + vector[1];
             };
-            for (i=0;i<balls.length;i++) {
+            for (var i=0;i<balls.length;i++) {
                 var vector = balls[i].vector;
-                balls[i].x = balls[i].x + vector[0];
-                balls[i].y = balls[i].y + vector[1];
+                balls[i].x = balls[i].x + vector[0] * time;
+                balls[i].y = balls[i].y + vector[1] * time;
                 checkCollision(balls[i]);
             };
         };
@@ -56,12 +119,12 @@
                     var vector = obj.vector;
                     var angle = (paddle.x + paddle.width / 2) - obj.x;
                     if (Math.abs(angle) < 15) {angle = 0};
-                    var yvector = vector[1] < maxspeed? -(vector[1] + 0.2) : -vector[1];
-                    obj.vector = [vector[0] - angle / 30, yvector];
+                    var yvector = vector[1] < maxspeed? -(vector[1] + 0.6) : -vector[1];
+                    obj.vector = [vector[0] - angle / 10, yvector];
                 };
             };
 
-            for (i=0;i<blocks.length;i++) { // block collision
+            for (var i=0;i<blocks.length;i++) { // block collision
                 if (checkClose(obj, blocks[i])) {
                     var quad = checkQuadrant(obj, blocks[i]);
                     if (checkHit(obj, blocks[i], quad)) {
@@ -76,14 +139,14 @@
         function checkHit(obj, block, quadrant) {
             if (quadrant == "top" || quadrant == "bottom") {
                 var y = quadrant == "top" ? block.y : block.y + block.height;
-                for (x=block.x;x<block.x + block.width;x++) {
+                for (var x=block.x;x<block.x + block.width;x++) {
                     if (checkDistance(x, y, obj.x, obj.y) <= obj.radius) {
                         return true
                     };
                 };
             } else {
                 var x = quadrant == "left" ? block.x : block.x + block.width;
-                for (y=block.y;y<block.y + block.height;y++) {
+                for (var y=block.y;y<block.y + block.height;y++) {
                     if (checkDistance(x, y, obj.x, obj.y) <= obj.radius) {
                         return true
                     };
@@ -153,37 +216,33 @@
 
         function getPosition(e, istouch) {
 
-            //this section is from http://www.quirksmode.org/js/events_properties.html
-            var targ;
+            var xoffset = 0;
+            var yoffset = 0;
             if (!e)
                 e = window.event;
-            if (e.target)
-                targ = e.target;
-            else if (e.srcElement)
-                targ = e.srcElement;
-            if (targ.nodeType == 3) // defeat Safari bug
-                targ = targ.parentNode;
+
+            var main = document.getElementById("main");
+            var game = document.getElementById("game");
+            xoffset += canvas.offsetLeft;
+            yoffset += canvas.offsetTop;
 
             if (istouch) {
                 e = e.changedTouches[0];
             };
 
-            // jQuery normalizes the pageX and pageY
-            // pageX,Y are the mouse positions relative to the document
-            // offset() returns the position of the element relative to the document
-            var x = e.pageX - $(targ).offset().left;
-            var y = e.pageY - $(targ).offset().top;
+            var x = e.pageX - xoffset;
+            var y = e.pageY - yoffset;
 
             return {"x": x, "y": y};
         };
-        // now just make sure you use this with jQuery
-        // obviously you can use other events other than click
-        $(myCanvas).mousemove(function(event) {
-            // jQuery would normalize the event
+        canvas.onmousemove = function(event) {
             mousepos = getPosition(event);
-        });
+        };
         canvas.ontouchmove = function (event) {
             mousepos = getPosition(event, true);
+        };
+        canvas.onclick = function () {
+            mouseClick();
         };
 
         function rect(x, y, w, h, vector, creator, ispaddle) {
@@ -202,7 +261,8 @@
             this.radius = r;
             this.vector = vector;
             this.creator = function() {creator(this.x, this.y, this.radius)};
-            balls.push(this);
+            queueballs.push(this);
+            this.queued = true;
         };
 
         var redRect = function(x, y, w, h) {
@@ -222,18 +282,22 @@
             ctx.fill()
         };
 
-        for (i=1;i<21;i++) {
+        for (var i=1;i<21;i++) {
             var block = new rect(50 + (i * 41), 50, 40, 20, [0, 0], redRect);
         };
 
-        for (i=1;i<20;i++) {
-            var block = new rect(Math.round(Math.random() * 600), Math.round(Math.random() * 600), 40, 20, [0, 0], redRect);
-        };
+        //for (var i=1;i<20;i++) {
+        //    var block = new rect(Math.round(Math.random() * 900), Math.round(Math.random() * 550), 40, 20, [0, 0], redRect);
+        //};
 
         paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
 
-        var ball = new circle(200, 400, 20, [1, 1], yellowBall);
+        var ball = new circle(200, 400, 20, [0, 0], yellowBall);
 
-        drawGame();
+        var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+
+        var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+
+        requestAnimationFrame(animate);
     </script>
 {% endblock %}
