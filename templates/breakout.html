@@ -22,12 +22,12 @@
                     timeToCall);
                     lastTime = currTime + timeToCall;
                     return id;
-                };
+                }
 
             if (!window.cancelAnimationFrame)
                 window.cancelAnimationFrame = function(id) {
                     clearTimeout(id);
-                };
+                }
         }());
 
 
@@ -42,11 +42,11 @@
         var lasttime;
         var pause = false;
 
-        window.onblur = function() {pause = true;};
+        window.onblur = function() {pause = true;}
         window.onfocus = function() {
             lasttime = null; // prevent physics bugs on refocus
             pause = false;
-        };
+        }
 
         function animate(time) {
             var timedif;
@@ -57,10 +57,10 @@
                 timedif = (time - lasttime) / 20;
                 lasttime = time;
                 if (timedif > 4) {timedif = 1}; // trying to prevent lag from killing the physics
-            };
+            }
             requestAnimationFrame(animate);
             drawGame(timedif);
-        };
+        }
 
         function drawGame(time) {
             updatePhysics(time);
@@ -68,7 +68,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (var i=0;i<blocks.length;i++) {
                 blocks[i].creator();
-            };
+            }
             paddle.creator();
             if (queueballs.length > 0) {
                 var qball = queueballs[queueballs.length - 1]
@@ -76,53 +76,53 @@
                 qball.y = paddle.y - qball.radius;
                 qball.vector = [0, 0];
                 qball.creator();
-            };
+            }
             for (var i=0;i<balls.length;i++) {
                 balls[i].creator();
-            };
-        };
+            }
+        }
 
         function mouseClick() {
             if (queueballs.length > 0) {
                 balls.push(queueballs.pop());
                 balls[balls.length - 1].vector = [4, -4];
-            };
-        };
+            }
+        }
 
         function updatePhysics(time) {
-            if (pause) {return;};
+            if (pause) {return;}
             for (var i=0;i<blocks.length;i++) {
                 var vector = blocks[i].vector;
                 blocks[i].x = blocks[i].x + vector[0];
                 blocks[i].y = blocks[i].y + vector[1];
-            };
+            }
             for (var i=0;i<balls.length;i++) {
                 var vector = balls[i].vector;
                 balls[i].x = balls[i].x + vector[0] * time;
                 balls[i].y = balls[i].y + vector[1] * time;
                 checkCollision(balls[i]);
-            };
-        };
+            }
+        }
 
         function updatePaddle() {
             paddle.x = mousepos? mousepos.x - (paddle.width/2) : paddle.x;
-        };
+        }
 
         function checkCollision(obj) {
             if (obj.x - obj.radius <= 0) {obj.vector = [Math.abs(obj.vector[0]), obj.vector[1]];}; // wall collisions
-            if (obj.y - obj.radius <= 0) {obj.vector = [obj.vector[0], Math.abs(obj.vector[1])]};
-            if (obj.y + obj.radius >= canvas.height) {obj.vector = [obj.vector[0], -Math.abs(obj.vector[1])]};
-            if (obj.x + obj.radius >= canvas.width) {obj.vector = [-Math.abs(obj.vector[0]), obj.vector[1]]};
+            if (obj.y - obj.radius <= 0) {obj.vector = [obj.vector[0], Math.abs(obj.vector[1])]}
+            if (obj.y + obj.radius >= canvas.height) {obj.vector = [obj.vector[0], -Math.abs(obj.vector[1])]}
+            if (obj.x + obj.radius >= canvas.width) {obj.vector = [-Math.abs(obj.vector[0]), obj.vector[1]]}
 
             if (obj.y > paddle.y - obj.radius && obj.y < paddle.y) { // paddle collision
                 if (obj.vector[1] > 0 && obj.x + obj.radius / 2 > paddle.x && obj.x - obj.radius / 2 < paddle.x + paddle.width) {
                     var vector = obj.vector;
                     var angle = (paddle.x + paddle.width / 2) - obj.x;
-                    if (Math.abs(angle) < 15) {angle = 0};
+                    if (Math.abs(angle) < 15) {angle = 0}
                     var yvector = vector[1] < maxspeed? -(vector[1] + 0.6) : -vector[1];
                     obj.vector = [vector[0] - angle / 10, yvector];
-                };
-            };
+                }
+            }
 
             for (var i=0;i<blocks.length;i++) { // block collision
                 if (checkClose(obj, blocks[i])) {
@@ -131,10 +131,10 @@
                         blocks.splice(i, 1);
                         bounce(obj, quad);
                         break;
-                    };
-                };
-            };
-        };
+                    }
+                }
+            }
+        }
 
         function checkHit(obj, block, quadrant) {
             if (quadrant == "top" || quadrant == "bottom") {
@@ -142,18 +142,18 @@
                 for (var x=block.x;x<block.x + block.width;x++) {
                     if (checkDistance(x, y, obj.x, obj.y) <= obj.radius) {
                         return true
-                    };
-                };
+                    }
+                }
             } else {
                 var x = quadrant == "left" ? block.x : block.x + block.width;
                 for (var y=block.y;y<block.y + block.height;y++) {
                     if (checkDistance(x, y, obj.x, obj.y) <= obj.radius) {
                         return true
-                    };
-                };
-            };
+                    }
+                }
+            }
             return false;
-        };
+        }
 
         function bounce (obj, quadrant) {
             var vector = obj.vector;
@@ -165,21 +165,21 @@
                 obj.vector = [Math.abs(vector[0]), vector[1]];
             } else {
                 obj.vector = [-Math.abs(vector[0]), vector[1]];
-            };
-        };
+            }
+        }
 
         function checkClose(ball, block) {
             blockcenter = [block.x + block.width / 2, block.y + block.height / 2];
             centertoedge = checkDistance(block.x, block.y, blockcenter[0], blockcenter[1]);
             if (checkDistance(ball.x, ball.y, blockcenter[0], blockcenter[1]) < centertoedge + ball.radius) {
                 return true
-            };
+            }
             return false
-        };
+        }
 
         function checkDistance(x1, y1, x2, y2) {
             return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-        };
+        }
 
         function checkQuadrant(ball, block) {
             var top = block.y;
@@ -198,12 +198,12 @@
             }
             else if (ball.y < top && ball.x < block.x + block.width / 2) { // top left side
                 var b = top - left;
-                if (ball.y > ball.x + b) {return "left"};
+                if (ball.y > ball.x + b) {return "left"}
                 return "top";
             }
             else if (ball.y < top) { // top right side
                 var b = top + right;
-                if (ball.y < -1 * ball.x + b) {return "top"};
+                if (ball.y < -1 * ball.x + b) {return "top"}
                 return "right"
             }
             else if (ball.x > right) { // right side
@@ -211,8 +211,8 @@
             }
             else if (ball.x < left) { // left side
                 return "left"
-            };
-        };
+            }
+        }
 
         function getPosition(e, istouch) {
 
@@ -228,22 +228,22 @@
 
             if (istouch) {
                 e = e.changedTouches[0];
-            };
+            }
 
             var x = e.pageX - xoffset;
             var y = e.pageY - yoffset;
 
-            return {"x": x, "y": y};
-        };
+            return {"x": x, "y": y}
+        }
         canvas.onmousemove = function(event) {
             mousepos = getPosition(event);
-        };
+        }
         canvas.ontouchmove = function (event) {
             mousepos = getPosition(event, true);
-        };
+        }
         canvas.onclick = function () {
             mouseClick();
-        };
+        }
 
         function rect(x, y, w, h, vector, creator, ispaddle) {
             this.x = x;
@@ -251,44 +251,44 @@
             this.width = w;
             this.height = h;
             this.vector = vector;
-            this.creator = function() {creator(this.x, this.y, this.width, this.height)};
-            if (!ispaddle) {blocks.push(this);};
-        };
+            this.creator = function() {creator(this.x, this.y, this.width, this.height)}
+            if (!ispaddle) {blocks.push(this);}
+        }
 
         function circle(x, y, r, vector, creator) {
             this.x = x;
             this.y = y;
             this.radius = r;
             this.vector = vector;
-            this.creator = function() {creator(this.x, this.y, this.radius)};
+            this.creator = function() {creator(this.x, this.y, this.radius)}
             queueballs.push(this);
             this.queued = true;
-        };
+        }
 
         var redRect = function(x, y, w, h) {
             ctx.fillStyle = "red";
             ctx.fillRect(x, y, w, h);
-        };
+        }
 
         var blueRect = function(x, y, w, h) {
             ctx.fillStyle = "blue";
             ctx.fillRect(x, y, w, h);
-        };
+        }
 
         var yellowBall = function(x, y, r) {
             ctx.beginPath();
             ctx.fillStyle = "yellow";
             ctx.arc(x, y, r, 0, 2 * Math.PI);
             ctx.fill()
-        };
+        }
 
         for (var i=1;i<21;i++) {
             var block = new rect(50 + (i * 41), 50, 40, 20, [0, 0], redRect);
-        };
+        }
 
         //for (var i=1;i<20;i++) {
         //    var block = new rect(Math.round(Math.random() * 900), Math.round(Math.random() * 550), 40, 20, [0, 0], redRect);
-        //};
+        //}
 
         paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
 

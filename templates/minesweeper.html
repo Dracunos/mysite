@@ -20,7 +20,7 @@
         var DEFAULTMINES = 15;
         var DEFAULTSIZE = 10;
         var body = document.getElementById("body");
-        body.oncontextmenu=function(){return false};
+        body.oncontextmenu=function(){return false}
         var gamediv = document.getElementById("gamediv");
         var minefield = document.getElementById("minefield");
         minefield.value = DEFAULTMINES;
@@ -31,20 +31,20 @@
         var pointstocheck = [];
         var checkbox = document.createElement("input");
         checkbox.setAttribute("type", "checkbox");
-        checkbox.onchange = function() {flagging = checkbox.checked};
+        checkbox.onchange = function() {flagging = checkbox.checked}
         var flagging = false;
         var won = false;
         var lost = false;
 
-        function addbr(obj) {obj.appendChild(document.createElement("br"))};
+        function addbr(obj) {obj.appendChild(document.createElement("br"))}
 
-        function clearElement(obj) {while (obj.firstChild) {obj.removeChild(obj.firstChild)}};
+        function clearElement(obj) {while (obj.firstChild) {obj.removeChild(obj.firstChild)}}
 
         function setCookie(cookiename, cookievalue) {
             var dt = new Date();
             dt.setFullYear(dt.getFullYear() + 1);
             document.cookie = cookiename + "=" + cookievalue + ";expires=" + dt
-        };
+        }
 
         function getCookie(cookiename) {
             var cookie = document.cookie.split("; ");
@@ -52,9 +52,9 @@
                 var cooki = cookie[i].split("=")
                 if (cooki[0] == cookiename) {
                     if (cooki.length == 2){return cooki[1]}
-                    else {return ""};
+                    else {return ""}
                 }
-        }};
+        }}
 
         function removeCookie(cookiename) {
             document.cookie = cookiename + "=;expires=January 1, 1970 00:00:00"
@@ -68,28 +68,28 @@
                     startGame();
                 }
             else {alert("0 < Mines < size^2; 1 < Size < " + SIZELIMIT)}
-        };
+        }
 
         function stringify(arr) {
             var s = [];
             for (i=0;i<arr.length;i++) {
                 s.push(arr[i].join(""))
-            };
+            }
             return s.join(",")
-        };
+        }
 
         function unstringify(arr) {
             var a = arr.split(",");
             for (i=0;i<a.length;i++) {
                 a[i] = a[i].split("");
-            };
+            }
             return a
-        };
+        }
 
         function saveGame() {
             var s = stringify(gamefield);
             setCookie("field", s);
-        };
+        }
 
         function setMines(arr, minecount) {
             var s = stringify(arr);
@@ -99,11 +99,11 @@
                 if (s[rand] != "," && s[rand] != "*") {
                     s[rand] = "*";
                     minecount--
-                };
-            };
+                }
+            }
             s = s.join("");
             return unstringify(s)
-        };
+        }
 
         function startGame() {
             won = false;
@@ -115,13 +115,13 @@
                 var subfield = [];
                 for (q=0;q<size;q++) {
                     subfield.push(".");
-                };
+                }
                 gamefield[i] = subfield;
-            };
+            }
             gamefield = setMines(gamefield, minecount);
             saveGame();
             drawGame();
-        };
+        }
 
         function drawGame() {
             clearElement(gamediv);
@@ -129,8 +129,8 @@
                 var checkpoint = pointstocheck.pop();
                 if (gamefield[checkpoint[0]][checkpoint[1]] == "." || gamefield[checkpoint[0]][checkpoint[1]] == "="){
                     selectCell(checkpoint[0], checkpoint[1]);
-                };
-            };
+                }
+            }
             won = checkWon();
             var table = document.createElement("table");
             table.style.marginLeft="auto";
@@ -146,34 +146,34 @@
                             if (char == "." || char == "*") {
                                 tabled.onclick = function(){
                                     onClick(i, q);
-                                };
+                                }
                                 tabled.style.backgroundColor="grey";
                                 tabled.oncontextmenu = function() {
                                     onClick(i, q, true);
-                                };
+                                }
                                 if (lost) {
-                                    tabled.onclick = function(){return true;};
+                                    tabled.onclick = function(){return true;}
                                     if (char == "*") {
                                         tabled.style.backgroundColor="red";
                                         var node = document.createTextNode(char);
                                         tabled.appendChild(node);
-                                    };
-                                };
+                                    }
+                                }
                                 if (won) {
-                                    tabled.onclick = function(){return true;};
+                                    tabled.onclick = function(){return true;}
                                     tabled.style.backgroundColor="green";
                                     var node = document.createTextNode(char);
                                     tabled.appendChild(node);
-                                };
+                                }
 
                             }
                             else if (char == "+" || char == "_") {
                                 tabled.onclick = function(){
                                     unFlag(i, q);
-                                };
+                                }
                                 tabled.oncontextmenu = function() {
                                     unFlag(i, q, true);
-                                };
+                                }
                                 tabled.style.backgroundColor="blue";
                             }
                             else {
@@ -182,57 +182,57 @@
                                     tabled.appendChild(node);
                                 }
                                 tabled.style.backgroundColor="white";
-                            };
+                            }
                             tabled.style.width="30px";
                             tabled.style.textAlign="center";
                             tabler.appendChild(tabled);
                         })(q)
-                    };
+                    }
                     tbody.appendChild(tabler);
                     tabler.style.height="30px";
                 })(i)
-            };
+            }
             table.appendChild(tbody);
             gamediv.appendChild(table);
             if (won) {alert("Congratulations! You won!")}
             else if (lost) {return true;}
-            else {gamediv.appendChild(checkbox);};
-        };
+            else {gamediv.appendChild(checkbox);}
+        }
 
         function onClick(i, q, rclick) {
             if (flagging || rclick) {
                 var char = gamefield[i][q];
                 if (char == "*") {gamefield[i][q] = "+"}
-                else {gamefield[i][q] = "_"};
+                else {gamefield[i][q] = "_"}
                 saveGame();
                 drawGame();
             }
             else {
                 selectCell(i, q);
                 drawGame();
-            };
-        };
+            }
+        }
 
         function unFlag(i, q, rclick) {
             if (flagging || rclick) {
                 var char = gamefield[i][q];
                 if (char == "+") {gamefield[i][q] = "*"}
-                else {gamefield[i][q] = "."};
+                else {gamefield[i][q] = "."}
                 saveGame();
                 drawGame();
             }
-        };
+        }
 
         function selectCell(x, y) {
             if (x < 0 || y < 0 || x >= gamefield.length || y >= gamefield.length) {
                 return false
-            };
+            }
             var value = gamefield[x][y];
             if (value == "*") {
                 lost = true;
                 removeCookie("field");
                 return
-            };
+            }
             var points = [[x-1, y-1], [x-1, y],[x-1, y+1],[x, y-1],
                 [x, y+1], [x+1, y-1], [x+1, y], [x+1, y+1]];
             for (i=0;i<points.length;i++) {
@@ -241,33 +241,33 @@
                 if (x1 < 0 || y1 < 0 || x1 >= gamefield.length || y1 >= gamefield.length) {
                     points[i] = "c";
                     continue;
-                };
+                }
                 var q = gamefield[x][y];
-                if (q != "*" && q != "." && q != "+" && q != "_") {points[i] = "c"};
-            };
+                if (q != "*" && q != "." && q != "+" && q != "_") {points[i] = "c"}
+            }
 
             var count = 0;
             for (i=0;i<points.length;i++) {
-                if (points[i] == "c") {continue};
+                if (points[i] == "c") {continue}
                 count = count + checkCell(points[i][0], points[i][1]);
-            };
+            }
             gamefield[x][y] = count;
             saveGame();
             if (count == 0) {
                 for (i=0;i<points.length;i++) {
-                    if (points[i] == "c") {continue};
+                    if (points[i] == "c") {continue}
                     pointstocheck[pointstocheck.length] = [points[i][0], points[i][1]];
-                };
-            };
-        };
+                }
+            }
+        }
 
         function checkCell(x, y) {
             if (x < 0 || y < 0 || x >= gamefield.length || y >= gamefield.length) {
                 return 0
-            };
-            if (gamefield[x][y] == "*" || gamefield[x][y] == "+") {return 1};
+            }
+            if (gamefield[x][y] == "*" || gamefield[x][y] == "+") {return 1}
             return 0;
-        };
+        }
 
         function checkWon() {
             var result = true
@@ -275,16 +275,16 @@
                 for (q=0;q<gamefield.length;q++) {
                     if (gamefield[i][q] == "." || gamefield[i][q] == "_") {
                         result = false;
-                    };
-                };
-            };
+                    }
+                }
+            }
             return result;
-        };
+        }
 
         function resumeGame() {
             gamefield = unstringify(getCookie("field"));
             drawGame()
-        };
+        }
 
         var cookie = document.cookie.split("; ");
         var found = false
