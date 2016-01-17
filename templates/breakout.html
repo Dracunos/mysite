@@ -38,9 +38,11 @@
         var paddle;
         var balls = [];
         var queueballs = [];
-        var maxspeed = 16;
+        var maxspeed = 10;
         var lasttime;
         var pause = false;
+        var currentlevel = 0;
+        var levels = [];
 
         window.onblur = function() {pause = true;}
         window.onfocus = function() {
@@ -56,7 +58,7 @@
             } else {
                 timedif = (time - lasttime) / 20;
                 lasttime = time;
-                if (timedif > 4) {timedif = 1}; // trying to prevent lag from killing the physics
+                if (timedif > 2) {timedif = 1}; // trying to prevent lag from killing the physics
             }
             requestAnimationFrame(animate);
             drawGame(timedif);
@@ -80,6 +82,24 @@
             for (var i=0;i<balls.length;i++) {
                 balls[i].creator();
             }
+            ctx.font = "80px Arial";
+            ctx.fillStyle = "yellow";
+            ctx.fillText(queueballs.length + balls.length,25,680);
+
+            if (balls.length + queueballs.length == 0) {loseGame();}
+            else if (blocks.length == 0) {winGame();}
+        }
+
+        function winGame() {
+            currentlevel += 1;
+            if (currentlevel >= levels.length) {currentlevel = 0;alert("You win!");}
+            balls = [];
+            queueballs = [];
+            levels[currentlevel]();
+        }
+
+        function loseGame() {
+            levels[currentlevel]();
         }
 
         function mouseClick() {
@@ -101,6 +121,10 @@
                 balls[i].x = balls[i].x + vector[0] * time;
                 balls[i].y = balls[i].y + vector[1] * time;
                 checkCollision(balls[i]);
+
+                if (balls[i].y > paddle.y + paddle.height) {
+                    balls.splice(i, 1);
+                }
             }
         }
 
@@ -114,7 +138,7 @@
             if (obj.y + obj.radius >= canvas.height) {obj.vector = [obj.vector[0], -Math.abs(obj.vector[1])]}
             if (obj.x + obj.radius >= canvas.width) {obj.vector = [-Math.abs(obj.vector[0]), obj.vector[1]]}
 
-            if (obj.y > paddle.y - obj.radius && obj.y < paddle.y) { // paddle collision
+            if (obj.y > paddle.y - obj.radius && obj.y < paddle.y + paddle.height / 2) { // paddle collision
                 if (obj.vector[1] > 0 && obj.x + obj.radius / 2 > paddle.x && obj.x - obj.radius / 2 < paddle.x + paddle.width) {
                     var vector = obj.vector;
                     var angle = (paddle.x + paddle.width / 2) - obj.x;
@@ -282,22 +306,95 @@
             ctx.fill()
         }
 
-        for (var i=1;i<21;i++) {
-            var block = new rect(50 + (i * 41), 50, 40, 20, [0, 0], redRect);
+        function level0() {
+            maxspeed = 10;
+            for (var q=0;q<3;q++) {
+                for (var i=1;i<21;i++) {
+                    var block = new rect(50 + (i * 41), 50 + (q * 21), 40, 20, [0, 0], redRect);
+                }
+            }
+            var ball = new circle(200, 400, 30, [0, 0], yellowBall);
+            for (var i=0;i<2;i++) {
+                var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+            }
+            paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
         }
+        levels.push(level0);
 
-        //for (var i=1;i<20;i++) {
-        //    var block = new rect(Math.round(Math.random() * 900), Math.round(Math.random() * 550), 40, 20, [0, 0], redRect);
-        //}
+        function level1() {
+            maxspeed = 10;
+            for (var i=0;i<40;i++) {
+                var block = new rect(Math.round(Math.random() * 900), Math.round(Math.random() * 500), 40, 20, [0, 0], redRect);
+            }
+            for (var i=0;i<3;i++) {
+                var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+            }
+            paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
+        }
+        levels.push(level1);
 
-        paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
+        function level2() {
+            maxspeed = 10;
+            var alt = false;
+            for (var q=0;q<8;q++) {
+                for (var i=1;i<22;i++) {
+                    if (alt) {
+                        alt = false;
+                        continue;
+                    } else {alt = true;}
+                    var block = new rect(30 + (i * 41), 50 + (q * 21), 40, 20, [0, 0], redRect);
+                }
+            }
+            for (var i=0;i<3;i++) {
+                var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+            }
+            var ball = new circle(200, 400, 10, [0, 0], yellowBall);
+            paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
+        }
+        levels.push(level2);
 
-        var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+        function level3() {
+            maxspeed = 10;
+            for (var q=0;q<4;q++) {
+                for (var i=1;i<21;i++) {
+                    var block = new rect(50 + (i * 41), 50 + (q * 42), 40, 20, [0, 0], redRect);
+                }
+            }
+            for (var i=0;i<3;i++) {
+                var ball = new circle(200, 400, 10, [0, 0], yellowBall);
+            }
+            paddle = new rect(400, 600, 70, 30, [0, 0], blueRect, true);
+        }
+        levels.push(level3);
 
-        var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+        function level4() {
+            maxspeed = 10;
+            for (var i=0;i<60;i++) {
+                var block = new rect(Math.round(Math.random() * 900), Math.round(Math.random() * 500), 60, 30, [0, 0], redRect);
+            }
+            for (var i=0;i<3;i++) {
+                var ball = new circle(200, 400, 30, [0, 0], yellowBall);
+            }
+            paddle = new rect(400, 600, 100, 30, [0, 0], blueRect, true);
+        }
+        levels.push(level4);
 
-        var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+        function level5() {
+            maxspeed = 20;
+            for (var q=0;q<8;q++) {
+                for (var i=1;i<21;i++) {
+                    if (Math.random() * 3 > 2) {continue;}
+                    var block = new rect(50 + (i * 41), 50 + (q * 31), 40, 20, [0, 0], redRect);
+                }
+            }
+            for (var i=0;i<3;i++) {
+                var ball = new circle(200, 400, 20, [0, 0], yellowBall);
+            }
+            paddle = new rect(400, 600, 80, 30, [0, 0], blueRect, true);
+        }
+        levels.push(level5);
 
         requestAnimationFrame(animate);
+        levels[currentlevel]();
     </script>
 {% endblock %}
