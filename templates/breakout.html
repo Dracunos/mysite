@@ -43,11 +43,22 @@
         var pause = false;
         var currentlevel = 0;
         var levels = [];
+        var powerups = [];
+        var activepowerups = [];
+        var bullets = 0;
+        var lastshot;
+        var firedbullets = [];
 
         window.onblur = function() {pause = true;}
         window.onfocus = function() {
             lasttime = null; // prevent physics bugs on refocus
             pause = false;
+        }
+
+        function setCookie(cookiename, cookievalue) {
+            var dt = new Date();
+            dt.setFullYear(dt.getFullYear() + 1);
+            document.cookie = cookiename + "=" + cookievalue + ";expires=" + dt
         }
 
         function animate(time) {
@@ -82,6 +93,24 @@
             for (var i=0;i<balls.length;i++) {
                 balls[i].creator();
             }
+            for (var i=0;i<activepowerups.length;i++) {
+                activepowerups[i].creator();
+            }
+            for (var i=0; i<firedbullets.length;i++) {
+                firedbullets[i].creator();
+            }
+            if (bullets > 0) {
+                if (!lastshot) {
+                    lastshot = new Date().getTime();
+                    fireBullet();
+                } else {
+                    var now = new Date().getTime()
+                    if (now - lastshot > 750) {
+                        lastshot = now;
+                        fireBullet();
+                    }
+                }
+            }
             ctx.font = "80px Arial";
             ctx.fillStyle = "yellow";
             ctx.fillText(queueballs.length + balls.length,25,680);
@@ -93,12 +122,18 @@
         function winGame() {
             currentlevel += 1;
             if (currentlevel >= levels.length) {currentlevel = 0;alert("You win!");}
+            setCookie("breakout", currentlevel);
             balls = [];
             queueballs = [];
+            activepowerups = [];
+            bullets = 0;
             levels[currentlevel]();
         }
 
         function loseGame() {
+            blocks = [];
+            bullets = 0;
+            activepowerups = [];
             levels[currentlevel]();
         }
 
@@ -124,6 +159,22 @@
 
                 if (balls[i].y > paddle.y + paddle.height) {
                     balls.splice(i, 1);
+                }
+            }
+            for (var i=0;i<activepowerups.length;i++) {
+                var vector = activepowerups[i].vector;
+                activepowerups[i].x += vector[0] * time;
+                activepowerups[i].y += vector[1] * time;
+                if (checkPowCatch(activepowerups[i])) {
+                    activepowerups.splice(i, 1);
+                }
+            }
+            for (var i=0;i<firedbullets.length;i++) {
+                var vector = firedbullets[i].vector;
+                firedbullets[i].x += vector[0] * time;
+                firedbullets[i].y += vector[1] * time;
+                if (checkBulletHit(firedbullets[i])) {
+                    firedbullets.splice(i, 1);
                 }
             }
         }
@@ -152,10 +203,29 @@
                 if (checkClose(obj, blocks[i])) {
                     var quad = checkQuadrant(obj, blocks[i]);
                     if (checkHit(obj, blocks[i], quad)) {
+                        checkPowerup(blocks[i]);
                         blocks.splice(i, 1);
                         bounce(obj, quad);
                         break;
                     }
+                }
+            }
+        }
+
+        function checkPowCatch(obj) {
+            if (obj.y > paddle.y - obj.radius && obj.y < paddle.y + paddle.height / 2) { // paddle collision
+                if (obj.vector[1] > 0 && obj.x + obj.radius / 2 > paddle.x && obj.x - obj.radius / 2 < paddle.x + paddle.width) {
+                    obj.power();
+                    return true;
+                }
+            }
+        }
+
+        function checkBulletHit(obj) {
+            for (var i=0;i<blocks.length;i++) {
+                if (obj.x + 4 >= blocks[i].x && obj.x <= blocks[i].x + blocks[i].width && obj.y < blocks[i].y + blocks[i].height) {
+                    blocks.splice(i, 1);
+                    return true;
                 }
             }
         }
@@ -238,6 +308,13 @@
             }
         }
 
+        function checkPowerup(block) {
+            if (Math.random() * 30 > 29) {
+                var pow = Math.round(Math.random() * (powerups.length - 1));
+                powerups[pow](block.x + block.width / 2, block.y + block.height / 2);
+            }
+        }
+
         function getPosition(e, istouch) {
 
             var xoffset = 0;
@@ -279,14 +356,13 @@
             if (!ispaddle) {blocks.push(this);}
         }
 
-        function circle(x, y, r, vector, creator) {
+        function circle(x, y, r, vector, creator, noque) {
             this.x = x;
             this.y = y;
             this.radius = r;
             this.vector = vector;
             this.creator = function() {creator(this.x, this.y, this.radius)}
-            queueballs.push(this);
-            this.queued = true;
+            if (!noque) {queueballs.push(this);}
         }
 
         var redRect = function(x, y, w, h) {
@@ -305,6 +381,71 @@
             ctx.arc(x, y, r, 0, 2 * Math.PI);
             ctx.fill()
         }
+
+        function powerup(x, y, radius, vector, creator, power) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.vector = vector;
+            this.creator = function() {creator(this.x, this.y)};
+            this.power = power;
+            activepowerups.push(this);
+        }
+
+        var splitballpower = function () {
+            if (balls.length == 0) {
+                balls.push(new circle(paddle.x + paddle.width / 2, paddle.y - 20, 20, [4, -4], yellowBall, true));
+                return;
+            }
+            var lastball = balls[balls.length - 1];
+            balls.push(new circle(lastball.x, lastball.y, 20, [4, -4], yellowBall, true));
+            balls.push(new circle(lastball.x, lastball.y, 20, [4, 4], yellowBall, true));
+            balls.push(new circle(lastball.x, lastball.y, 20, [-4, -4], yellowBall, true));
+            balls.push(new circle(lastball.x, lastball.y, 20, [-4, 4], yellowBall, true));
+        }
+        var splitball = function(x, y) {
+            ctx.fillStyle = "yellow";
+            ctx.beginPath();
+            ctx.arc(x,y,7,0,2*Math.PI);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x-6,y-10,7,0,2*Math.PI);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x+6,y-10,7,0,2*Math.PI);
+            ctx.fill();
+        }
+        powerups.push(function(x, y) {
+            new powerup(x, y, 15, [0, 3], splitball, splitballpower)
+        });
+
+        function bullet(x, y, vector, creator) {
+            this.x = x;
+            this.y = y;
+            this.vector = vector;
+            this.creator = function() {creator(this.x, this.y)};
+            firedbullets.push(this);
+        }
+        var crbullet = function(x, y) {
+            ctx.fillStyle = "red";
+            ctx.fillRect(x, y, 4, 15);
+        }
+        function fireBullet() {
+            new bullet(paddle.x + paddle.width / 2 - 2, paddle.y, [0, -15], crbullet);
+            bullets -= 1;
+        }
+        var gunpower = function () {
+            bullets += 15;
+        }
+        var gunpowerup = function(x, y) {
+            ctx.fillStyle = "blue";
+            ctx.fillRect(x - 13, y - 5, 26, 10);
+            ctx.fillStyle = "red";
+            ctx.fillRect(x - 1, y - 12, 2, 7);
+        }
+        powerups.push(function(x, y) {
+            new powerup(x, y, 15, [0, 4], gunpowerup, gunpower)
+        });
 
         function level0() {
             maxspeed = 10;
@@ -393,6 +534,12 @@
             paddle = new rect(400, 600, 80, 30, [0, 0], blueRect, true);
         }
         levels.push(level5);
+
+        var cookie = document.cookie.split("; ");
+        for (i=0;i<cookie.length;i++) {
+            var cooki = cookie[i].split("=");
+            if (cooki[0] == "breakout") {currentlevel = parseInt(cooki[1]);}
+        }
 
         requestAnimationFrame(animate);
         levels[currentlevel]();
