@@ -16,12 +16,12 @@
             {{ form.num(size='3', autofocus=true) }}
             <br>
             {% for error in form.num.errors %}
-                <span>[{{ error }}]</span>
+                <span class="err">[{{ error }}]</span>
             {% endfor %}<br>
         </p>
         <p><input type="submit" value="Submit" name="btn"></p>
         {% if wrongin %}
-            <span>Whole numbers 1-100 only</span>
+            <span class="err">Whole numbers 1-100 only</span>
             <br>
         {% endif %}
         Tries: {{ tries }}

@@ -30,17 +30,17 @@
             <br>Category: {{ category }}<br>
             <br>
             {% for error in form.hminput.errors %}
-                <span>[{{ error }}]</span>
+                <span class="err">[{{ error }}]</span>
             {% endfor %}<br>
         </p>
         <p><input type="submit" value="Submit" name="btn"></p>
     </form>
     {% if alreadypick %}
-        <span>This letter has already been tried.</span>
+        <span class="err">This letter has already been tried.</span>
         <br>
     {% endif %}
     {% if numin %}
-        <span>Letters only.</span>
+        <span class="err">Letters only.</span>
         <br>
     {% endif %}
     <br>

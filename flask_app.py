@@ -1,5 +1,5 @@
 import os
-from random import randint
+from random import randint, SystemRandom
 from flask import Flask, render_template, redirect, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_required
@@ -220,6 +220,11 @@ def breakout():
     return render_template('breakout.html', ttl='Breakout')
 
 
+@app.route('/autocrawl')
+def autocrawl():
+    return render_template('autocrawl.html', ttl='AutoCrawl')
+
+
 @app.route('/membersarea')
 @login_required
 def members_area():
@@ -249,6 +254,49 @@ class NumForm(Form):
 
 class NewNumForm(Form):
     pass
+
+class RandNumForm(Form):
+    rngchance = StringField('rngchance')
+    rngcount = StringField('rngcount')
+
+@app.route('/chancesuccess', methods=['GET', 'POST'])
+def chancesuccess():
+    form = RandNumForm()
+    if form.validate_on_submit():
+        rngchance = form.rngchance.data
+        rngcount = form.rngcount.data
+        if rngchance not in [str(x) for x in range(0, 101)]:
+            rngerror = "Chance must be whole number from 0 to 100."
+            return render_template('chancesuccess.html', form=form,
+                                   rngerror=rngerror)
+        if rngcount not in [str(x) for x in range(1, 101)]:
+            rngerror = "Count must be whole number from 1 to 100."
+            return render_template('chancesuccess.html', form=form,
+                                   rngerror=rngerror)
+        randrng = SystemRandom()
+        successcount = sum([1 for x in range(int(rngcount)) if int(rngchance) >= randrng.randint(1, 100)])
+        results = (successcount, rngcount)
+        return render_template('chancesuccess.html', form=form, results=results)
+    return render_template('chancesuccess.html', form=form)
+
+@app.route('/chancesuccess2', methods=['GET', 'POST'])
+def chancesuccess2():
+    form = RandNumForm()
+    if form.validate_on_submit():
+        rngchance = form.rngchance.data
+        rngcount = form.rngcount.data
+        if rngchance not in [str(x) for x in range(0, 101)]:
+            rngerror = "Chance must be whole number from 0 to 100."
+            return render_template('chancesuccess.html', form=form,
+                                   rngerror=rngerror)
+        if rngcount not in [str(x) for x in range(1, 101)]:
+            rngerror = "Count must be whole number from 1 to 100."
+            return render_template('chancesuccess.html', form=form,
+                                   rngerror=rngerror)
+        successcount = sum([1 for x in range(int(rngcount)) if int(rngchance) >= randint(1, 100)])
+        results = (successcount, rngcount)
+        return render_template('chancesuccess.html', form=form, results=results)
+    return render_template('chancesuccess.html', form=form)
 
 
 if __name__ == '__main__':
