@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-    <div id="game">
+    <div id="game" style="padding-top: 15px">
         <canvas id="myCanvas" width="1000" height="700" style="border:1px solid black;">
-        </canvas>
+        </canvas><br>
+        %<input id="puchance" size=3 value="7" style="text-align: center" oninput="changeChance()"><br><img src="/static/gpusymbol.jpg" style="padding-top: 5px"><img src="/static/mbpusymbol.jpg" style="padding-top: 5px">
     </div>
     <script>
-        (function() {
+        (function() { // https://gist.github.com/paulirish/1579671
             var lastTime = 0;
             var vendors = ['webkit', 'moz'];
             for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
@@ -29,6 +30,19 @@
                     clearTimeout(id);
                 }
         }());
+
+        var POWERUP_CHANCE = 7;
+
+        var puchanceinput = document.getElementById("puchance");
+        puchanceinput.value = '7';
+
+        function changeChance() {
+            var n = puchanceinput.value;
+            if (!isNaN(parseFloat(n)) && isFinite(n))
+                POWERUP_CHANCE = n;
+        }
+
+
 
 
         var canvas = document.getElementById("myCanvas");
@@ -123,18 +137,22 @@
             currentlevel += 1;
             if (currentlevel >= levels.length) {currentlevel = 0;alert("You win!");}
             setCookie("breakout", currentlevel);
-            balls = [];
-            queueballs = [];
-            activepowerups = [];
-            bullets = 0;
+            clearScreen();
             levels[currentlevel]();
         }
 
         function loseGame() {
-            blocks = [];
-            bullets = 0;
-            activepowerups = [];
+            clearScreen();
             levels[currentlevel]();
+        }
+
+        function clearScreen() {
+            blocks = [];
+            balls = [];
+            queueballs = [];
+            activepowerups = [];
+            bullets = 0;
+            firedbullets = [];
         }
 
         function mouseClick() {
@@ -309,7 +327,7 @@
         }
 
         function checkPowerup(block) {
-            if (Math.random() * 30 > 29) {
+            if (Math.random() * 100 < POWERUP_CHANCE) {
                 var pow = Math.round(Math.random() * (powerups.length - 1));
                 powerups[pow](block.x + block.width / 2, block.y + block.height / 2);
             }
